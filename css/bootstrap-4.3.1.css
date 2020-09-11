@@ -58,9 +58,9 @@ body {
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
-  color: #212529;
+  color: #fff;
   text-align: left;
-  background-color: #fff;
+  background-color: #121212;
 }
 
 [tabindex="-1"]:focus {
@@ -702,6 +702,8 @@ pre code {
   -ms-flex: 0 0 100%;
   flex: 0 0 100%;
   max-width: 100%;
+  background-color: #222222;
+  border-radius: 0.6rem
 }
 
 .order-first {
