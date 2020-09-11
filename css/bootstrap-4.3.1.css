@@ -577,6 +577,12 @@ pre code {
   }
 }
 
+@media (min-width: 1500px) {
+  .container {
+    max-width: 1440px;
+  }
+}
+
 .container-fluid {
   width: 100%;
   padding-right: 15px;
@@ -1030,7 +1036,7 @@ pre code {
   .col-md-4 {
     -ms-flex: 0 0 33.333333%;
     flex: 0 0 33.333333%;
-    max-width: 33.333333%;
+    max-width: 31.333333%;
   }
   .col-md-5 {
     -ms-flex: 0 0 41.666667%;
