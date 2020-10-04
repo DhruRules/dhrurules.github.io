@@ -2,3 +2,21 @@
   border: 1px solid transparent!important;
 }
 
+.masthead {
+  /*display: table;*/
+  /*width: 100%;*/
+  /*height: auto;*/
+  /*padding: 200px 0;*/
+  /*text-align: center;*/
+  /*color: #fff;*/
+  background-color: transparent;
+  /*background-size: cover;*/
+}
+
+body {
+  /*font-family: Lora,Helvetica Neue,Helvetica,Arial,sans-serif;*/
+  /*position: relative;*/
+  /*color: #fff;*/
+  background-color: transparent;
+}
+
