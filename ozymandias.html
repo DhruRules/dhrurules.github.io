@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ozymandias: Neon Ruins (Dev)</title>
+    <style>
+        /* Basic styling */
+        body { margin: 0; overflow: hidden; background-color: #111; }
+        canvas { display: block; }
+        /* Message box style */
+        #message-box {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7); color: #fff; padding: 10px 20px;
+            border-radius: 5px; font-family: sans-serif; font-size: 14px;
+            display: none; text-align: center; z-index: 100; max-width: 80%;
+        }
+        /* Style for initial interaction overlay */
+        #start-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); color: white;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 24px; font-family: sans-serif; cursor: pointer;
+            z-index: 200; text-align: center; padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="start-overlay">Click or Press any key to enter the ruins</div>
+    <div id="message-box">Use WASD or Arrow Keys to move. Explore the ruins.</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        // === THREE.JS & TONE.JS SETUP ===
+
+        let scene, camera, renderer;
+        let playerCube, groundPlane;
+        let rainSystem;
+        const moveSpeed = 0.1;
+        const keys = {};
+        let collidableObjects = [];
+        let poiObjects = [];
+        const playerBoundingBox = new THREE.Box3();
+        const objectBoundingBox = new THREE.Box3();
+        const rainSpeed = 0.3;
+        const rainSpawnHeight = 50;
+        const rainAreaSize = 100;
+
+        // Tone.js variables
+        let rainNoise, rainFilter, rainVolume;
+        let audioInitialized = false; // Flag to ensure audio starts only once
+
+        // --- Initialization ---
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2a);
+            scene.fog = new THREE.Fog(0x1a1a2a, 15, 60);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, 10);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
+
+            // --- Lighting ---
+            const ambientLight = new THREE.AmbientLight(0x404055);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xaaccff, 0.5);
+            directionalLight.position.set(8, 15, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 1024;
+            directionalLight.shadow.mapSize.height = 1024;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 50;
+            scene.add(directionalLight);
+
+            // --- Objects ---
+            // Ground Plane
+            const groundGeometry = new THREE.PlaneGeometry(100, 100);
+            const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a3a, side: THREE.DoubleSide });
+            groundPlane = new THREE.Mesh(groundGeometry, groundMaterial);
+            groundPlane.rotation.x = -Math.PI / 2;
+            groundPlane.receiveShadow = true;
+            scene.add(groundPlane);
+
+            // Player Cube
+            const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x00ddcc });
+            playerCube = new THREE.Mesh(playerGeometry, playerMaterial);
+            playerCube.position.y = 0.5;
+            playerCube.castShadow = true;
+            scene.add(playerCube);
+
+            // --- Create Environment, Landmarks & POIs ---
+            createEnvironment(); // Creates general debris/buildings
+            createLandmarks();  // Creates specific Ozymandias structures
+
+            // --- Create Rain Particle System ---
+            createRain();
+
+            // --- Setup Audio (but don't start yet) ---
+            setupAudio();
+
+            // --- Event Listeners ---
+            // Listener for initial interaction to start audio
+            const startOverlay = document.getElementById('start-overlay');
+            startOverlay.addEventListener('click', handleFirstInteraction);
+            window.addEventListener('keydown', handleFirstInteraction); // Also allow keypress to start
+
+            window.addEventListener('keydown', handleKeyDown); // General keydown handler
+            window.addEventListener('keyup', handleKeyUp);
+            window.addEventListener('resize', onWindowResize);
+
+            // Don't start animation loop until user interaction
+            // animate(); // Moved to handleFirstInteraction
+        }
+
+         // --- Handle First User Interaction ---
+         function handleFirstInteraction() {
+            if (audioInitialized) return; // Only run once
+
+            const startOverlay = document.getElementById('start-overlay');
+            if (startOverlay) {
+                startOverlay.style.display = 'none'; // Hide overlay
+            }
+
+            // Start Tone.js context and rain sound
+            Tone.start().then(() => {
+                console.log("Audio Context Started");
+                if (rainNoise && rainNoise.state !== 'started') {
+                    rainNoise.start();
+                    console.log("Rain noise started");
+                }
+            }).catch(e => {
+                console.error("Tone.start() failed:", e);
+            });
+
+            audioInitialized = true;
+            showMessage("Use WASD or Arrow Keys to move. Explore the ruins.", 5000); // Show message after start
+            animate(); // Start the animation loop now
+         }
+
+
+        // --- Setup Audio (Tone.js) ---
+        function setupAudio() {
+            // Create pink noise for a rain-like sound
+            rainNoise = new Tone.Noise("pink");
+
+            // Filter the noise to make it sound more like rain (less harsh)
+            // AutoFilter provides some modulation which can sound like varying intensity
+            rainFilter = new Tone.AutoFilter({
+                frequency: "4n", // Speed of the filter sweep
+                baseFrequency: 400, // Center frequency
+                octaves: 3, // Range of the filter sweep
+                filter: { type: "lowpass", rolloff: -12 }, // Lowpass filter
+                depth: 0.6 // Amount of modulation
+            }).toDestination(); // Connect filter output to speakers
+
+            // Adjust volume
+            rainVolume = new Tone.Volume(-18).connect(rainFilter); // Lower volume (-18 dB), connect to filter input
+
+            // Connect noise output to the volume node
+            rainNoise.connect(rainVolume);
+
+            // Don't start noise here, wait for user interaction in handleFirstInteraction()
+            // rainNoise.start();
+        }
+
+        // --- Create Environment Geometry (Varied Shapes) & POIs ---
+        function createEnvironment() {
+            // Materials
+            const buildingMaterial = new THREE.MeshStandardMaterial({ color: 0x555566, roughness: 0.8, metalness: 0.2 });
+            const debrisMaterial = new THREE.MeshStandardMaterial({ color: 0x775544, roughness: 0.9 });
+
+            const buildingCount = 25; // Adjusted count as landmarks take space
+            const debrisCount = 40;
+            const placementArea = 90;
+
+            // Create Buildings (Varied Shapes) - Code largely unchanged from previous version
+            for (let i = 0; i < buildingCount; i++) {
+                let buildingGeometry;
+                const height = Math.random() * 12 + 4; // Slightly shorter general buildings
+                const baseSize = Math.random() * 3 + 2;
+                const shapeType = Math.random();
+                if (shapeType < 0.6) buildingGeometry = new THREE.BoxGeometry(baseSize, height, baseSize * (Math.random() * 0.5 + 0.75));
+                else if (shapeType < 0.9) buildingGeometry = new THREE.CylinderGeometry(baseSize / 2, baseSize / 2 * (Math.random() * 0.3 + 0.7), height, 8);
+                else buildingGeometry = new THREE.ConeGeometry(baseSize / 1.5, height, 8);
+
+                const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+                let posX, posZ;
+                do { posX = (Math.random() - 0.5) * placementArea; posZ = (Math.random() - 0.5) * placementArea; }
+                while (Math.sqrt(posX*posX + posZ*posZ) < 10);
+                building.position.set(posX, height / 2, posZ);
+                if (buildingGeometry instanceof THREE.ConeGeometry) building.position.y = height / 2;
+                building.castShadow = true; building.receiveShadow = true;
+                building.rotation.y = Math.random() * Math.PI * 2;
+                scene.add(building); collidableObjects.push(building);
+            }
+
+            // Create Debris (Varied Shapes) - Code largely unchanged
+            for (let i = 0; i < debrisCount; i++) {
+                 let debrisGeometry;
+                 const size = Math.random() * 1.0 + 0.3;
+                 const shapeType = Math.random();
+                 if (shapeType < 0.5) debrisGeometry = new THREE.BoxGeometry(size, size, size);
+                 else if (shapeType < 0.8) debrisGeometry = new THREE.SphereGeometry(size / 1.5, 6, 4);
+                 else debrisGeometry = new THREE.CylinderGeometry(size/2, size/2, size * (Math.random() * 0.5 + 0.5), 6);
+
+                const debris = new THREE.Mesh(debrisGeometry, debrisMaterial);
+                let posX, posZ;
+                 do { posX = (Math.random() - 0.5) * (placementArea + 5); posZ = (Math.random() - 0.5) * (placementArea + 5); }
+                 while (Math.sqrt(posX*posX + posZ*posZ) < 5);
+                debris.position.set(posX, size / 2, posZ);
+                 if (debrisGeometry instanceof THREE.SphereGeometry) { debris.position.y = size / 1.5; debris.scale.y = Math.random() * 0.4 + 0.3; }
+                 else if (debrisGeometry instanceof THREE.CylinderGeometry) { debris.position.y = (size * (Math.random() * 0.5 + 0.5)) / 2; }
+                debris.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                debris.castShadow = true;
+                scene.add(debris); collidableObjects.push(debris);
+            }
+
+             // POIs - Moved creation to createLandmarks or keep separate if preferred
+             createPOIs(); // Create standard POIs separately
+        }
+
+        // --- Create Specific Landmarks ---
+        function createLandmarks() {
+             const landmarkMaterial = new THREE.MeshStandardMaterial({
+                 color: 0x888877, // Stone-like color
+                 roughness: 0.9,
+                 metalness: 0.1
+             });
+             const landmarkGroup = new THREE.Group(); // Group all landmarks
+
+             // 1. Two Vast and Trunkless Legs
+             const legHeight = 18;
+             const legRadius = 2.5;
+             const legGeometry = new THREE.CylinderGeometry(legRadius, legRadius * 0.9, legHeight, 12); // Slightly tapered
+
+             const leg1 = new THREE.Mesh(legGeometry, landmarkMaterial);
+             leg1.position.set(-15, legHeight / 2, -30); // Position leg 1
+             leg1.castShadow = true; leg1.receiveShadow = true;
+             landmarkGroup.add(leg1);
+             collidableObjects.push(leg1); // Add individual parts for collision
+
+             const leg2 = new THREE.Mesh(legGeometry, landmarkMaterial);
+             leg2.position.set(-10, legHeight / 2, -31); // Position leg 2, slightly offset
+             leg2.castShadow = true; leg2.receiveShadow = true;
+             landmarkGroup.add(leg2);
+             collidableObjects.push(leg2);
+
+             // Add some broken top pieces for legs (optional)
+             const brokenTopGeom = new THREE.BoxGeometry(legRadius * 2.5, 1, legRadius * 2.5);
+             const brokenTop1 = new THREE.Mesh(brokenTopGeom, landmarkMaterial);
+             brokenTop1.position.set(leg1.position.x, legHeight, leg1.position.z);
+             brokenTop1.rotation.set(0.1, 0, 0.2);
+             landmarkGroup.add(brokenTop1); collidableObjects.push(brokenTop1);
+
+             // 2. Shattered Visage (Simplified representation)
+             const visageGroup = new THREE.Group();
+             const headRadius = 4;
+             // Main head shape (partially buried sphere)
+             const headGeom = new THREE.SphereGeometry(headRadius, 16, 12, 0, Math.PI * 2, 0, Math.PI / 1.5); // Partial sphere
+             const head = new THREE.Mesh(headGeom, landmarkMaterial);
+             head.rotation.x = -Math.PI / 2; // Lay it flat
+             head.rotation.z = 0.5; // Tilt it
+             head.position.y = headRadius * 0.2; // Slightly above ground
+             head.castShadow = true; head.receiveShadow = true;
+             visageGroup.add(head); collidableObjects.push(head);
+
+             // Add some broken block pieces near the head
+             const fragmentGeom = new THREE.BoxGeometry(1.5, 1.5, 2);
+             const fragment1 = new THREE.Mesh(fragmentGeom, landmarkMaterial);
+             fragment1.position.set(headRadius * 0.8, 0.75, headRadius * 0.2);
+             fragment1.rotation.set(0.2, 0.5, 0.1);
+             visageGroup.add(fragment1); collidableObjects.push(fragment1);
+
+             const fragment2 = new THREE.Mesh(fragmentGeom, landmarkMaterial);
+             fragment2.position.set(-headRadius * 0.5, 0.75, -headRadius * 0.7);
+             fragment2.rotation.set(-0.3, -0.2, 0.6);
+             visageGroup.add(fragment2); collidableObjects.push(fragment2);
+
+             // Position the whole visage group
+             visageGroup.position.set(20, 0, 15);
+             landmarkGroup.add(visageGroup);
+
+             scene.add(landmarkGroup);
+
+             // Add POIs near landmarks
+             poiObjects.push({
+                 mesh: leg1, // Use leg1 mesh as anchor, trigger distance will handle proximity
+                 text: '"Two vast and trunkless legs of stone Stand in the desert..."',
+                 triggered: false, triggerDistance: 8.0, resetDistance: 10.0
+             });
+             poiObjects.push({
+                 mesh: head, // Use head mesh as anchor
+                 text: '"...Near them, on the sand, Half sunk a shattered visage lies..."',
+                 triggered: false, triggerDistance: 7.0, resetDistance: 9.0
+             });
+        }
+
+        // --- Create Standard POIs ---
+        function createPOIs() {
+             const poiMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffaa00, emissive: 0xcc8800, emissiveIntensity: 0.5
+             });
+             // Standard POIs (less specific than landmarks)
+             const standardPoiData = [
+                { pos: new THREE.Vector3(0, 0.7, -25), text: '...the lone and level sands stretch far away. (Or are they digital?)' },
+                { pos: new THREE.Vector3(-10, 0.7, 30), text: 'Silicon and Circuits return to dust.' },
+                { pos: new THREE.Vector3(30, 0.7, -10), text: 'The hand that mocked them, and the heart that fed...' } // Another quote fragment
+             ];
+
+             standardPoiData.forEach(data => {
+                const poiGeometry = new THREE.IcosahedronGeometry(0.6);
+                const poiMesh = new THREE.Mesh(poiGeometry, poiMaterial);
+                poiMesh.position.copy(data.pos);
+                poiMesh.castShadow = true;
+                scene.add(poiMesh);
+                // Add standard POI details
+                poiObjects.push({
+                    mesh: poiMesh, text: data.text, triggered: false,
+                    triggerDistance: 3.0, resetDistance: 4.0
+                });
+                collidableObjects.push(poiMesh);
+            });
+        }
+
+
+        // --- Create Rain Particle System --- (Unchanged)
+        function createRain() {
+            const rainCount = 8000;
+            const positions = new Float32Array(rainCount * 3);
+            for (let i = 0; i < rainCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * rainAreaSize;
+                positions[i + 1] = Math.random() * rainSpawnHeight;
+                positions[i + 2] = (Math.random() - 0.5) * rainAreaSize;
+            }
+            const rainGeometry = new THREE.BufferGeometry();
+            rainGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const rainMaterial = new THREE.PointsMaterial({
+                color: 0xaaaaee, size: 0.15, transparent: true, opacity: 0.7, sizeAttenuation: true,
+            });
+            rainSystem = new THREE.Points(rainGeometry, rainMaterial);
+            scene.add(rainSystem);
+        }
+
+        // --- Animate Rain --- (Unchanged)
+        function animateRain() {
+            if (!rainSystem) return;
+            const positions = rainSystem.geometry.attributes.position.array;
+            const playerPos = playerCube ? playerCube.position : new THREE.Vector3();
+            for (let i = 0; i < positions.length; i += 3) {
+                positions[i + 1] -= rainSpeed;
+                if (positions[i + 1] < 0) {
+                    positions[i] = (Math.random() - 0.5) * rainAreaSize + playerPos.x;
+                    positions[i + 1] = rainSpawnHeight + Math.random() * 10;
+                    positions[i + 2] = (Math.random() - 0.5) * rainAreaSize + playerPos.z;
+                }
+            }
+            rainSystem.geometry.attributes.position.needsUpdate = true;
+        }
+
+
+        // --- Handle Keyboard Input ---
+        function handleKeyDown(event) {
+            // Handle first interaction if audio not yet started (e.g., if user presses key before clicking)
+            handleFirstInteraction();
+            keys[event.code] = true;
+        }
+        function handleKeyUp(event) { keys[event.code] = false; }
+
+        // --- Check for Collision --- (Unchanged)
+        function checkCollision(moveVec) {
+            if (!playerCube) return false;
+            playerBoundingBox.setFromObject(playerCube);
+            const nextPositionBox = playerBoundingBox.clone().translate(moveVec);
+            for (let i = 0; i < collidableObjects.length; i++) {
+                // Ensure the object still exists and has geometry before getting bounding box
+                if(collidableObjects[i] && collidableObjects[i].geometry) {
+                    objectBoundingBox.setFromObject(collidableObjects[i]);
+                    if (nextPositionBox.intersectsBox(objectBoundingBox)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+         // --- Check Points of Interest --- (Checks distance to POI anchor mesh)
+         function checkPOIs() {
+            if (!playerCube) return;
+            const playerPos = playerCube.position;
+            poiObjects.forEach(poi => {
+                // Check distance to the POI's anchor mesh position
+                if (poi.mesh && poi.mesh.geometry) { // Ensure mesh exists
+                    const distance = playerPos.distanceTo(poi.mesh.position);
+                    if (distance < poi.triggerDistance && !poi.triggered) {
+                        showMessage(poi.text, 4000);
+                        poi.triggered = true;
+                        // Optional: Visual feedback on the anchor mesh if it's a distinct POI object
+                        if (poi.mesh.material.emissive) {
+                            poi.mesh.material.emissiveIntensity = 1.0;
+                            setTimeout(() => { poi.mesh.material.emissiveIntensity = 0.5; }, 500);
+                        }
+                    } else if (distance > poi.resetDistance && poi.triggered) {
+                        poi.triggered = false;
+                    }
+                }
+            });
+         }
+
+        // --- Update Player Movement --- (Unchanged)
+        function updatePlayerMovement() {
+            if (!playerCube) return;
+            const moveDirection = new THREE.Vector3(0, 0, 0);
+            if (keys['KeyW'] || keys['ArrowUp']) moveDirection.z -= 1;
+            if (keys['KeyS'] || keys['ArrowDown']) moveDirection.z += 1;
+            if (keys['KeyA'] || keys['ArrowLeft']) moveDirection.x -= 1;
+            if (keys['KeyD'] || keys['ArrowRight']) moveDirection.x += 1;
+
+            if (moveDirection.lengthSq() > 0) {
+                moveDirection.normalize().multiplyScalar(moveSpeed);
+                const moveX = new THREE.Vector3(moveDirection.x, 0, 0);
+                const moveZ = new THREE.Vector3(0, 0, moveDirection.z);
+                if (!checkCollision(moveX)) playerCube.position.add(moveX);
+                if (!checkCollision(moveZ)) playerCube.position.add(moveZ);
+            }
+
+            // Camera Follow Logic
+            const cameraOffset = new THREE.Vector3(0, 7, 12);
+            const targetPosition = playerCube.position.clone().add(cameraOffset);
+            camera.position.lerp(targetPosition, 0.08);
+            camera.lookAt(playerCube.position);
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            // Check if audio has been initialized before continuing the loop
+            if (!audioInitialized) return;
+
+            requestAnimationFrame(animate);
+
+            // Update game logic
+            updatePlayerMovement();
+            checkPOIs();
+            animateRain();
+
+            // Render scene
+            renderer.render(scene, camera);
+        }
+
+        // --- Handle Window Resize --- (Unchanged)
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+         // --- Message Box --- (Unchanged)
+        let messageTimeout;
+        function showMessage(text, duration = 3000) {
+            const messageBox = document.getElementById('message-box');
+            if (!messageBox) return;
+            messageBox.textContent = text;
+            messageBox.style.display = 'block';
+            if (messageTimeout) clearTimeout(messageTimeout);
+            if (duration > 0) {
+                messageTimeout = setTimeout(() => { messageBox.style.display = 'none'; }, duration);
+            }
+        }
+
+        // --- Start the application ---
+        window.onload = init; // Call init when page loads
+
+    </script>
+</body>
+</html>
