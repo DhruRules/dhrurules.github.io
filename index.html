@@ -1,58 +1,457 @@
 <!DOCTYPE html>
-<html data-bs-theme="light">
-
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Home - Dhruvik Patel</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dhruvik Patel - Portfolio</title>
     <meta property="og:type" content="website">
-    <meta name="description" content="Dhruvik Patel's Portfolio">
-    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic&amp;display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Cabin:700&amp;display=swap">
-    <link rel="stylesheet" href="assets/fonts/font-awesome.min.css">
-    <link rel="stylesheet" href="assets/css/Particle-JS---Background-Fixed-1.css">
-    <link rel="stylesheet" href="assets/css/Particle-JS---Background-Fixed.css">
-    <link rel="stylesheet" href="assets/css/untitled.css">
+    <meta name="description" content="Dhruvik Patel's Portfolio - Student, Scientist, Engineer, Future Doctor">
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background: #fefefe;
+            color: #333;
+        }
+        
+        canvas {
+            display: block;
+            cursor: grab;
+        }
+        
+        canvas:active {
+            cursor: grabbing;
+        }
+        
+        #ui-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        #intro-text {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            max-width: 400px;
+            pointer-events: auto;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            font-weight: 300;
+            margin-bottom: 10px;
+            color: #222;
+            letter-spacing: -0.02em;
+        }
+        
+        .subtitle {
+            font-size: 1.1em;
+            line-height: 1.5;
+            color: #666;
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+        
+        .contact {
+            font-size: 0.9em;
+            color: #888;
+            font-weight: 400;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            font-size: 1.2em;
+            font-weight: 400;
+        }
+        
+        .controls-hint {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.8em;
+            color: #aaa;
+            text-align: right;
+            font-weight: 400;
+        }
+        
+        .ozymandias-link {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            pointer-events: auto;
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 10px 20px;
+            border: 2px solid transparent;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            font-size: 0.9em;
+        }
+        
+        .ozymandias-link:hover {
+            border-color: #333;
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .ozymandias-link {
+                top: 20px;
+                right: 20px;
+                padding: 8px 16px;
+                font-size: 0.8em;
+            }
+            
+            #intro-text {
+                bottom: 30px;
+                left: 30px;
+                max-width: calc(100% - 60px);
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .controls-hint {
+                display: none;
+            }
+        }
+    </style>
 </head>
+<body>
+    <div id="loading">Loading...</div>
+    
+    <div id="ui-container">
+        <a href="ozymandias.html" class="ozymandias-link">Ozymandias</a>
+        
+        <div id="intro-text">
+            <h1>Dhruvik Patel</h1>
+            <p class="subtitle">Student, Scientist, Engineer, Future Doctor</p>
+            <p class="contact">dhruvik@dhruvikp.com</p>
+        </div>
+        
+        <div class="controls-hint">
+            Click and drag to orbit<br>
+            Scroll to zoom
+        </div>
+    </div>
 
-<body id="page-top">
-    <nav class="navbar navbar-expand-md navbar navbar-expand-lg fixed-top navbar-light" id="mainNav">
-        <div class="container-fluid"><a class="navbar-brand js-scroll-trigger" href="#">Dhruvik Patel</a><button data-bs-toggle="collapse" class="navbar-toggler navbar-toggler-right" data-bs-target="#navbarResponsive" type="button" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation" value="Menu"><i class="fa fa-bars"></i></button>
-            <div class="collapse navbar-collapse" id="navbarResponsive">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item nav-link js-scroll-trigger" style="opacity: 1;"><a class="nav-link active border rounded border-primary js-scroll-trigger" href="index.html" style="opacity: 1;">Home</a></li>
-                    <li class="nav-item nav-link js-scroll-trigger"><a class="nav-link border rounded js-scroll-trigger" href="statistics.html">Statistics</a></li>
-                    <li class="nav-item nav-link js-scroll-trigger"><a class="nav-link border rounded js-scroll-trigger" href="projects.html">Projects</a></li>
-                    <li class="nav-item nav-link js-scroll-trigger"></li>
-                    <li class="nav-item nav-link js-scroll-trigger"></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    <header class="masthead"><div id="particles-js"></div>
-        <div class="intro-body">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-8 mx-auto">
-                        <h1 class="brand-heading">Dhruvik Patel</h1>
-                        <p class="intro-text">Student, Scientist, Engineer, Future Doctor</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-    <footer>
-        <div class="container text-center">
-            <p>dhruvik@dhruvikp.com<br>Copyright ©&nbsp;Dhruvik Patel 2024</p>
-        </div>
-    </footer><script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="assets/js/bs-init.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
-    <script src="assets/js/grayscale.js"></script>
-    <script src="assets/js/Particle-JS---Background-Fixed.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.155.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.155.0/examples/jsm/"
+        }
+    }
+    </script>
+    
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        
+        // Three.js scene setup
+        let scene, camera, renderer, controls;
+        let man, chair, ground;
+        
+        // Initialize the Three.js scene
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xfefefe);
+            scene.fog = new THREE.Fog(0xfefefe, 50, 200);
+            
+            // Camera - Isometric view
+            const aspect = window.innerWidth / window.innerHeight;
+            camera = new THREE.PerspectiveCamera(35, aspect, 0.1, 1000);
+            
+            // Position camera for isometric-like view
+            camera.position.set(15, 15, 15);
+            camera.lookAt(0, 0, 0);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            
+            document.body.appendChild(renderer.domElement);
+            
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2.2; // Limit vertical rotation
+            controls.minDistance = 8;
+            controls.maxDistance = 40;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.5;
+            
+            // Lighting
+            setupLighting();
+            
+            // Create the scene elements
+            createGround();
+            createChair();
+            createMan();
+            
+            // Hide loading
+            document.getElementById('loading').style.display = 'none';
+            
+            // Start animation
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+        }
+        
+        function setupLighting() {
+            // Ambient light for overall illumination
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            // Main directional light (sun)
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(20, 30, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 100;
+            directionalLight.shadow.camera.left = -30;
+            directionalLight.shadow.camera.right = 30;
+            directionalLight.shadow.camera.top = 30;
+            directionalLight.shadow.camera.bottom = -30;
+            scene.add(directionalLight);
+            
+            // Soft fill light
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            fillLight.position.set(-10, 10, -10);
+            scene.add(fillLight);
+        }
+        
+        function createGround() {
+            // Infinite white ground plane
+            const groundGeometry = new THREE.PlaneGeometry(200, 200);
+            const groundMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.8
+            });
+            ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // Add subtle grid for depth perception
+            const gridHelper = new THREE.GridHelper(40, 40, 0xf0f0f0, 0xf0f0f0);
+            gridHelper.material.transparent = true;
+            gridHelper.material.opacity = 0.3;
+            scene.add(gridHelper);
+        }
+        
+        function createChair() {
+            const chairGroup = new THREE.Group();
+            
+            // Chair materials
+            const chairMaterial = new THREE.MeshPhysicalMaterial({
+                color: 0x444444,
+                metalness: 0.7,
+                roughness: 0.3
+            });
+            
+            // Seat
+            const seatGeometry = new THREE.BoxGeometry(1.5, 0.1, 1.5);
+            const seat = new THREE.Mesh(seatGeometry, chairMaterial);
+            seat.position.y = 1.8;
+            seat.castShadow = true;
+            chairGroup.add(seat);
+            
+            // Backrest
+            const backrestGeometry = new THREE.BoxGeometry(1.5, 1.5, 0.1);
+            const backrest = new THREE.Mesh(backrestGeometry, chairMaterial);
+            backrest.position.set(0, 2.5, -0.7);
+            backrest.castShadow = true;
+            chairGroup.add(backrest);
+            
+            // Legs (4 legs)
+            const legGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1.8);
+            const legPositions = [
+                [-0.6, 0.9, -0.6],
+                [0.6, 0.9, -0.6],
+                [-0.6, 0.9, 0.6],
+                [0.6, 0.9, 0.6]
+            ];
+            
+            legPositions.forEach(pos => {
+                const leg = new THREE.Mesh(legGeometry, chairMaterial);
+                leg.position.set(pos[0], pos[1], pos[2]);
+                leg.castShadow = true;
+                chairGroup.add(leg);
+            });
+            
+            // Folding mechanism (simplified)
+            const hingeGeometry = new THREE.CylinderGeometry(0.03, 0.03, 1.6);
+            const hinge = new THREE.Mesh(hingeGeometry, chairMaterial);
+            hinge.rotation.z = Math.PI / 2;
+            hinge.position.set(0, 1.8, 0);
+            chairGroup.add(hinge);
+            
+            chair = chairGroup;
+            scene.add(chair);
+        }
+        
+        function createMan() {
+            const manGroup = new THREE.Group();
+            
+            // Abstract human materials
+            const skinMaterial = new THREE.MeshPhysicalMaterial({
+                color: 0xfdbcb4,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+            
+            const clothingMaterial = new THREE.MeshPhysicalMaterial({
+                color: 0x2c3e50,
+                roughness: 0.9,
+                metalness: 0.05
+            });
+            
+            // Head
+            const headGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+            const head = new THREE.Mesh(headGeometry, skinMaterial);
+            head.position.set(0, 3.8, -0.2);
+            head.castShadow = true;
+            manGroup.add(head);
+            
+            // Torso
+            const torsoGeometry = new THREE.BoxGeometry(0.8, 1.2, 0.4);
+            const torso = new THREE.Mesh(torsoGeometry, clothingMaterial);
+            torso.position.set(0, 2.8, -0.1);
+            torso.castShadow = true;
+            manGroup.add(torso);
+            
+            // Arms
+            const armGeometry = new THREE.CapsuleGeometry(0.12, 0.8);
+            
+            // Left arm
+            const leftArm = new THREE.Mesh(armGeometry, skinMaterial);
+            leftArm.position.set(-0.6, 2.8, 0);
+            leftArm.rotation.z = Math.PI / 6;
+            leftArm.castShadow = true;
+            manGroup.add(leftArm);
+            
+            // Right arm
+            const rightArm = new THREE.Mesh(armGeometry, skinMaterial);
+            rightArm.position.set(0.6, 2.8, 0);
+            rightArm.rotation.z = -Math.PI / 6;
+            rightArm.castShadow = true;
+            manGroup.add(rightArm);
+            
+            // Legs (sitting position)
+            const legGeometry = new THREE.CapsuleGeometry(0.15, 0.9);
+            
+            // Left leg
+            const leftLeg = new THREE.Mesh(legGeometry, clothingMaterial);
+            leftLeg.position.set(-0.25, 1.4, 0.3);
+            leftLeg.rotation.x = Math.PI / 2;
+            leftLeg.castShadow = true;
+            manGroup.add(leftLeg);
+            
+            // Right leg
+            const rightLeg = new THREE.Mesh(legGeometry, clothingMaterial);
+            rightLeg.position.set(0.25, 1.4, 0.3);
+            rightLeg.rotation.x = Math.PI / 2;
+            rightLeg.castShadow = true;
+            manGroup.add(rightLeg);
+            
+            // Feet
+            const footGeometry = new THREE.BoxGeometry(0.3, 0.1, 0.5);
+            const footMaterial = new THREE.MeshPhysicalMaterial({
+                color: 0x8b4513,
+                roughness: 0.9
+            });
+            
+            const leftFoot = new THREE.Mesh(footGeometry, footMaterial);
+            leftFoot.position.set(-0.25, 0.05, 0.8);
+            leftFoot.castShadow = true;
+            manGroup.add(leftFoot);
+            
+            const rightFoot = new THREE.Mesh(footGeometry, footMaterial);
+            rightFoot.position.set(0.25, 0.05, 0.8);
+            rightFoot.castShadow = true;
+            manGroup.add(rightFoot);
+            
+            man = manGroup;
+            scene.add(man);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Update controls
+            controls.update();
+            
+            // Subtle animation for the man (breathing effect)
+            if (man) {
+                man.children[1].scale.y = 1 + Math.sin(Date.now() * 0.002) * 0.02; // Torso breathing
+                man.children[0].rotation.y = Math.sin(Date.now() * 0.001) * 0.05; // Head slight movement
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Pause auto-rotation on user interaction
+        let interactionTimeout;
+        
+        controls.addEventListener('start', function() {
+            controls.autoRotate = false;
+            clearTimeout(interactionTimeout);
+        });
+        
+        controls.addEventListener('end', function() {
+            interactionTimeout = setTimeout(() => {
+                controls.autoRotate = true;
+            }, 3000);
+        });
+        
+        // Initialize when page loads
+        window.addEventListener('load', init);
+    </script>
 </body>
-
 </html>
