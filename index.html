@@ -160,13 +160,30 @@
         </div>
     </div>
 
-    <!-- Use the same Three.js version as ozymandias.html -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- Add GLTFLoader for r128 from JSDeliver -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- Three.js r176 using modern ES6 modules -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.176.0/build/three.module.js",
+            "three/examples/jsm/loaders/GLTFLoader": "https://unpkg.com/three@0.176.0/examples/jsm/loaders/GLTFLoader.js"
+        }
+    }
+    </script>
+    
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+        
+        // Make THREE global for the rest of the script
+        window.THREE = THREE;
+        window.GLTFLoader = GLTFLoader;
+        
+        // Initialize after modules are loaded
+        window.addEventListener('load', init);
+    </script>
     
     <script>
-        // Three.js scene setup - using same approach as ozymandias.html
+        // Three.js scene setup - updated for r176
         let scene, camera, renderer;
         let humanModel, chairModel, ground;
         let mouseX = 0, mouseY = 0;
@@ -258,8 +275,8 @@
         }
         
         function loadModels() {
-            // GLTFLoader for Three.js r128
-            const loader = new THREE.GLTFLoader();
+            // GLTFLoader for Three.js r176 - using the global reference
+            const loader = new GLTFLoader();
             
             // Load human model
             loader.load(
@@ -271,10 +288,10 @@
                     // Configure the human model
                     humanModel.traverse(function(child) {
                         if (child.isMesh) {
-                            // Make it white and low poly
+                            // Make it white and low poly style
                             const whiteMaterial = new THREE.MeshStandardMaterial({
                                 color: 0xffffff,
-                                flatShading: true,
+                                flatShading: false,
                                 roughness: 0.6,
                                 metalness: 0.1
                             });
@@ -285,7 +302,7 @@
                     });
                     
                     // Position and scale the human model
-                    humanModel.position.set(0, 1.8, 0.5);
+                    humanModel.position.set(0, 1, 0.5);
                     humanModel.scale.set(2, 2, 2);
                     humanModel.rotation.y = Math.PI; // Face forward
                     
@@ -297,8 +314,8 @@
                 },
                 function(error) {
                     console.error('Error loading human model:', error);
-                    // Fallback to try another model
-                    loadFallbackHuman();
+                    // Fallback to geometric shapes if model fails
+                    createFallbackHuman();
                 }
             );
             
@@ -312,7 +329,7 @@
                     // Configure the chair model
                     chairModel.traverse(function(child) {
                         if (child.isMesh) {
-                            // Keep original material but make it a bit darker
+                            // Keep original material but make it darker
                             if (child.material) {
                                 child.material.color = new THREE.Color(0x444444);
                             }
@@ -321,9 +338,9 @@
                         }
                     });
                     
-                    // Position and scale the chair model
+                    // Position and scale the chair model  
                     chairModel.position.set(0, 0, 0);
-                    chairModel.scale.set(3, 3, 3);
+                    chairModel.scale.set(2, 1, 2); // Make it wider and shorter like a stool
                     
                     scene.add(chairModel);
                     console.log('Chair model added to scene');
@@ -336,54 +353,56 @@
                 },
                 function(error) {
                     console.error('Error loading stool model:', error);
-                    // Hide loading even if chair fails
+                    // Create a fallback geometric chair
+                    createFallbackChair();
                     checkModelsLoaded();
                 }
             );
         }
         
-        function loadFallbackHuman() {
-            const loader = new THREE.GLTFLoader();
+        function createFallbackHuman() {
+            // Fallback to basic geometry if model loading fails
+            humanModel = new THREE.Group();
             
-            loader.load(
-                'models/rigged_figure.glb',
-                function(gltf) {
-                    console.log('Fallback human model loaded:', gltf);
-                    humanModel = gltf.scene;
-                    
-                    // Configure the human model
-                    humanModel.traverse(function(child) {
-                        if (child.isMesh) {
-                            // Make it white and low poly
-                            const whiteMaterial = new THREE.MeshStandardMaterial({
-                                color: 0xffffff,
-                                flatShading: true,
-                                roughness: 0.6,
-                                metalness: 0.1
-                            });
-                            child.material = whiteMaterial;
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                        }
-                    });
-                    
-                    // Position and scale the human model
-                    humanModel.position.set(0, 1.8, 0.5);
-                    humanModel.scale.set(2, 2, 2);
-                    humanModel.rotation.y = Math.PI; // Face forward
-                    
-                    scene.add(humanModel);
-                    console.log('Fallback human model added to scene');
-                    checkModelsLoaded();
-                },
-                function(progress) {
-                    console.log('Fallback human loading progress:', (progress.loaded / progress.total * 100) + '%');
-                },
-                function(error) {
-                    console.error('Error loading fallback human model:', error);
-                    checkModelsLoaded();
-                }
-            );
+            const humanMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                flatShading: true,
+                roughness: 0.6,
+                metalness: 0.1
+            });
+            
+            // Simple humanoid shape
+            const bodyGeometry = new THREE.BoxGeometry(0.6, 1.2, 0.3);
+            const body = new THREE.Mesh(bodyGeometry, humanMaterial);
+            body.position.set(0, 1, 0);
+            body.castShadow = true;
+            humanModel.add(body);
+            
+            humanModel.position.set(0, 0.6, 0.5);
+            scene.add(humanModel);
+            console.log('Fallback human created');
+        }
+        
+        function createFallbackChair() {
+            // Fallback geometric chair
+            chairModel = new THREE.Group();
+            
+            const chairMaterial = new THREE.MeshStandardMaterial({
+                color: 0x444444,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            
+            // Simple stool
+            const seatGeometry = new THREE.BoxGeometry(1, 0.1, 1);
+            const seat = new THREE.Mesh(seatGeometry, chairMaterial);
+            seat.position.set(0, 0.8, 0);
+            seat.castShadow = true;
+            chairModel.add(seat);
+            
+            chairModel.position.set(0, 0, 0);
+            scene.add(chairModel);
+            console.log('Fallback chair created');
         }
         
         function checkModelsLoaded() {
@@ -412,14 +431,18 @@
             
             // Subtle animation for the models
             if (humanModel) {
-                // Breathing effect and slight movement
-                humanModel.scale.y = 2 + Math.sin(Date.now() * 0.002) * 0.02;
-                humanModel.rotation.y = Math.PI + Math.sin(Date.now() * 0.001) * 0.05;
+                // Breathing effect
+                humanModel.scale.y = 1 + Math.sin(Date.now() * 0.002) * 0.02;
+                // Slight head turn
+                const head = humanModel.children[0]; // First child is the head
+                if (head) {
+                    head.rotation.y = Math.sin(Date.now() * 0.001) * 0.1;
+                }
             }
             
-            // Auto-rotate the scene slightly
+            // Gentle overall scene rotation
+            const rotationSpeed = 0.001;
             if (humanModel && chairModel) {
-                const rotationSpeed = 0.003;
                 humanModel.rotation.y += rotationSpeed;
                 chairModel.rotation.y += rotationSpeed;
             }
@@ -433,9 +456,6 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
-        
-        // Initialize when page loads - same as ozymandias.html
-        init();
     </script>
 </body>
 </html>
