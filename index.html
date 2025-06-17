@@ -7,10 +7,19 @@
     <meta property="og:type" content="website">
     <meta name="description" content="Dhruvik Patel's Portfolio">
     
-    <!-- Google Fonts - Inter -->
+    <!-- DNS prefetch and preconnect for performance -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Optimized Google Fonts with font-display swap -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Preload Three.js for faster loading -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js" as="script" crossorigin>
+    <link rel="preload" href="models/Dhruvik.glb" as="fetch" crossorigin>
     
     <style>
         * {
@@ -20,7 +29,7 @@
         }
         
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             overflow: hidden;
             background: #fefefe;
             color: #333;
@@ -83,6 +92,27 @@
             color: #666;
             font-size: 1.2em;
             font-weight: 400;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .loading-bar {
+            width: 200px;
+            height: 2px;
+            background: #eee;
+            border-radius: 1px;
+            overflow: hidden;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            background: #666;
+            border-radius: 1px;
+            transition: width 0.3s ease;
+            width: 0%;
         }
         
         .controls-hint {
@@ -113,7 +143,12 @@
     </style>
 </head>
 <body>
-    <div id="loading">Loading...</div>
+    <div id="loading">
+        <div>Loading...</div>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loading-progress"></div>
+        </div>
+    </div>
     
     <div id="ui-container">
         <div id="intro-text">
@@ -128,7 +163,7 @@
         </div>
     </div>
 
-    <!-- Three.js r176 using modern ES6 modules -->
+    <!-- Optimized Three.js loading - single, fast approach -->
     <script type="importmap">
     {
         "imports": {
@@ -139,452 +174,349 @@
     }
     </script>
     
-    <!-- Fallback script loader -->
-    <script>
-        // Fallback loading function in case importmap fails
-        window.loadThreeJSFallback = function() {
-            console.log('Loading Three.js fallback...');
-            
-            // Load Three.js from jsDelivr
-            const threeScript = document.createElement('script');
-            threeScript.src = 'https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.min.js';
-            threeScript.onload = function() {
-                console.log('Three.js loaded via fallback');
-                
-                // Load GLTFLoader
-                const gltfScript = document.createElement('script');
-                gltfScript.src = 'https://cdn.jsdelivr.net/npm/three@0.176.0/examples/js/loaders/GLTFLoader.js';
-                gltfScript.onload = function() {
-                    console.log('GLTFLoader loaded via fallback');
-                    
-                    // Load OrbitControls
-                    const controlsScript = document.createElement('script');
-                    controlsScript.src = 'https://cdn.jsdelivr.net/npm/three@0.176.0/examples/js/controls/OrbitControls.js';
-                    controlsScript.onload = function() {
-                        console.log('OrbitControls loaded via fallback');
-                        
-                        // Set up global references
-                        window.THREE = THREE;
-                        window.GLTFLoader = THREE.GLTFLoader;
-                        window.OrbitControls = THREE.OrbitControls;
-                        
-                        // Initialize the scene
-                        if (typeof init === 'function') {
-                            init();
-                        }
-                    };
-                    controlsScript.onerror = function() {
-                        console.error('Failed to load OrbitControls fallback');
-                    };
-                    document.head.appendChild(controlsScript);
-                };
-                gltfScript.onerror = function() {
-                    console.error('Failed to load GLTFLoader fallback');
-                };
-                document.head.appendChild(gltfScript);
-            };
-            threeScript.onerror = function() {
-                console.error('Failed to load Three.js fallback');
-                document.getElementById('loading').innerHTML = 'Error: Failed to load Three.js libraries';
-            };
-            document.head.appendChild(threeScript);
-        };
-    </script>
-    
     <script type="module">
+        // Performance monitoring
+        const perfStart = performance.now();
+        
+        // Loading progress tracking
+        let loadingProgress = 0;
+        const progressBar = document.getElementById('loading-progress');
+        
+        function updateProgress(progress) {
+            loadingProgress = Math.max(loadingProgress, progress);
+            if (progressBar) {
+                progressBar.style.width = loadingProgress + '%';
+            }
+        }
+        
+        updateProgress(10); // Initial progress
+        
         try {
-            // Try to import Three.js modules
-            const THREE = await import('three');
-            const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader');
-            const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls');
+            // Fast Three.js module loading
+            const [THREE, { GLTFLoader }, { OrbitControls }] = await Promise.all([
+                import('three'),
+                import('three/examples/jsm/loaders/GLTFLoader'),
+                import('three/examples/jsm/controls/OrbitControls')
+            ]);
             
-            // Make THREE global for the rest of the script
-            window.THREE = THREE;
-            window.GLTFLoader = GLTFLoader;
-            window.OrbitControls = OrbitControls;
+            updateProgress(30);
             
-            console.log('Three.js modules loaded successfully via ES modules');
+            // Three.js scene setup - optimized for performance
+            let scene, camera, renderer, controls;
+            let dhruvikModel;
+            let needsRender = true;
+            let animationId;
             
-            // Initialize after modules are loaded
-            if (typeof init === 'function') {
-                init();
-            } else {
-                window.addEventListener('load', init);
-            }
-        } catch (error) {
-            console.warn('ES modules failed, falling back to script tags:', error);
-            // Use fallback loading
-            window.loadThreeJSFallback();
-        }
-    </script>
-    
-    <!-- Backup: Load via traditional script tags if modules fail completely -->
-    <script>
-        // Check if modules loaded after a short delay
-        setTimeout(function() {
-            if (typeof window.THREE === 'undefined') {
-                console.log('ES modules and import maps failed, using backup script approach');
+            // Performance-optimized initialization
+            function init() {
+                console.log('Initializing optimized Three.js scene...');
                 
-                // Direct script tag approach - most compatible
-                const script1 = document.createElement('script');
-                script1.src = 'https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.min.js';
-                script1.onload = function() {
-                    const script2 = document.createElement('script');
-                    script2.src = 'https://cdn.jsdelivr.net/npm/three@0.176.0/examples/js/loaders/GLTFLoader.js';
-                    script2.onload = function() {
-                        const script3 = document.createElement('script');
-                        script3.src = 'https://cdn.jsdelivr.net/npm/three@0.176.0/examples/js/controls/OrbitControls.js';
-                        script3.onload = function() {
-                            window.GLTFLoader = THREE.GLTFLoader;
-                            window.OrbitControls = THREE.OrbitControls;
-                            console.log('Three.js loaded via backup script tags');
-                            if (typeof init === 'function') {
-                                init();
+                // Scene with minimal fog for better performance
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xfefefe);
+                scene.fog = new THREE.Fog(0xfefefe, 80, 150); // Reduced fog range
+                
+                // Camera - optimized FOV
+                camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 200);
+                camera.position.set(20, 20, 20);
+                camera.lookAt(0, 2, 0);
+                
+                // Renderer with performance optimizations
+                renderer = new THREE.WebGLRenderer({ 
+                    antialias: window.devicePixelRatio <= 1, // Disable AA on high DPI
+                    powerPreference: "default",
+                    stencil: false,
+                    depth: true
+                });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFShadowMap; // Better quality than Basic
+                renderer.outputColorSpace = THREE.SRGBColorSpace;
+                renderer.info.autoReset = false; // Manual reset for debugging
+                document.body.appendChild(renderer.domElement);
+                
+                updateProgress(50);
+                
+                // Optimized orbit controls
+                controls = new OrbitControls(camera, renderer.domElement);
+                controls.target.set(0, 2, 0);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                controls.enablePan = false;
+                controls.enableZoom = true;
+                controls.enableRotate = true;
+                controls.minDistance = 10;
+                controls.maxDistance = 80; // Reduced max distance
+                controls.maxPolarAngle = Math.PI * 0.9;
+                controls.autoRotate = false;
+                
+                // Mark for render when controls change
+                controls.addEventListener('change', () => { needsRender = true; });
+                controls.update();
+                
+                // Optimized lighting setup
+                setupLighting();
+                
+                // Create scene elements
+                createGround();
+                loadModel();
+                
+                // Start smart animation loop
+                startSmartAnimation();
+                
+                // Handle window resize
+                window.addEventListener('resize', onWindowResize, false);
+                
+                updateProgress(70);
+            }
+            
+            function setupLighting() {
+                // Reduced ambient light for better contrast
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+                scene.add(ambientLight);
+                
+                // Optimized directional light with reduced shadow quality
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+                directionalLight.position.set(25, 40, 15);
+                directionalLight.castShadow = true;
+                
+                // Reduced shadow map size for better performance
+                directionalLight.shadow.mapSize.width = 1024; // Reduced from 4096
+                directionalLight.shadow.mapSize.height = 1024; // Reduced from 4096
+                directionalLight.shadow.camera.near = 0.5;
+                directionalLight.shadow.camera.far = 100; // Reduced from 150
+                directionalLight.shadow.camera.left = -25; // Reduced from -40
+                directionalLight.shadow.camera.right = 25;
+                directionalLight.shadow.camera.top = 25;
+                directionalLight.shadow.camera.bottom = -25;
+                directionalLight.shadow.bias = -0.0005;
+                directionalLight.shadow.radius = 2;
+                scene.add(directionalLight);
+            }
+            
+            function createGround() {
+                // Smaller, more efficient ground plane
+                const groundGeometry = new THREE.PlaneGeometry(200, 200);
+                const groundMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                ground.rotation.x = -Math.PI / 2;
+                ground.receiveShadow = true;
+                scene.add(ground);
+                
+                // Optimized grid with fewer divisions
+                const gridHelper = new THREE.GridHelper(100, 50, 0xf0f0f0, 0xf0f0f0); // Reduced from 200, 200
+                gridHelper.material.transparent = true;
+                gridHelper.material.opacity = 0.2;
+                scene.add(gridHelper);
+            }
+            
+            function loadModel() {
+                const loader = new GLTFLoader();
+                
+                // Load with progress tracking
+                loader.load(
+                    'models/Dhruvik.glb',
+                    function(gltf) {
+                        console.log('Model loaded successfully');
+                        dhruvikModel = gltf.scene;
+                        
+                        // Optimize model materials and shadows
+                        dhruvikModel.traverse(function(child) {
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                                
+                                // Optimize materials for performance
+                                if (child.material) {
+                                    child.material.shadowSide = THREE.FrontSide;
+                                }
                             }
-                        };
-                        document.head.appendChild(script3);
-                    };
-                    document.head.appendChild(script2);
-                };
-                document.head.appendChild(script1);
-            }
-        }, 1000);
-    </script>
-    
-    <script>
-        // Three.js scene setup - updated for r176
-        let scene, camera, renderer, controls;
-        let dhruvikModel, ground;
-        
-        // Add model loading tracking
-        let modelsLoaded = { human: false, chair: false };
-        
-        // Initialize the Three.js scene
-        function init() {
-            console.log('Initializing Three.js scene...');
-            console.log('THREE object:', typeof THREE);
-            console.log('GLTFLoader:', typeof GLTFLoader);
-            
-            // Check if Three.js modules loaded properly
-            if (typeof THREE === 'undefined') {
-                console.error('THREE.js not loaded properly');
-                document.getElementById('loading').innerHTML = 'Error: THREE.js failed to load';
-                return;
+                        });
+                        
+                        // Position and scale
+                        dhruvikModel.position.set(0, 0, 0);
+                        dhruvikModel.scale.set(1.5, 1.5, 1.5);
+                        dhruvikModel.rotation.y = 0;
+                        
+                        scene.add(dhruvikModel);
+                        
+                        updateProgress(100);
+                        hideLoading();
+                        needsRender = true;
+                        
+                        console.log(`Total load time: ${(performance.now() - perfStart).toFixed(2)}ms`);
+                    },
+                    function(progress) {
+                        const percent = Math.min(90, 70 + (progress.loaded / progress.total * 20));
+                        updateProgress(percent);
+                    },
+                    function(error) {
+                        console.error('Error loading model:', error);
+                        createFallbackModel();
+                        updateProgress(100);
+                        hideLoading();
+                    }
+                );
             }
             
-            if (typeof GLTFLoader === 'undefined') {
-                console.error('GLTFLoader not loaded properly');
-                document.getElementById('loading').innerHTML = 'Error: GLTFLoader failed to load';
-                return;
+            function createFallbackModel() {
+                console.log('Creating optimized fallback model');
+                dhruvikModel = new THREE.Group();
+                
+                const humanMaterial = new THREE.MeshLambertMaterial({ // Changed to Lambert for better performance
+                    color: 0xf8f8f8
+                });
+                
+                const stoolMaterial = new THREE.MeshLambertMaterial({
+                    color: 0x222222
+                });
+                
+                // Simplified stool
+                const seatGeometry = new THREE.BoxGeometry(1.2, 0.1, 1.2);
+                const seat = new THREE.Mesh(seatGeometry, stoolMaterial);
+                seat.position.set(0, 0.8, 0);
+                seat.castShadow = true;
+                dhruvikModel.add(seat);
+                
+                // Stool legs (simplified)
+                const legGeometry = new THREE.BoxGeometry(0.08, 0.8, 0.08);
+                for (let i = 0; i < 4; i++) {
+                    const leg = new THREE.Mesh(legGeometry, stoolMaterial);
+                    const x = (i % 2) * 1.0 - 0.5;
+                    const z = Math.floor(i / 2) * 1.0 - 0.5;
+                    leg.position.set(x, 0.4, z);
+                    leg.castShadow = true;
+                    dhruvikModel.add(leg);
+                }
+                
+                // Simplified human figure
+                const torsoGeometry = new THREE.BoxGeometry(0.6, 1.0, 0.3);
+                const torso = new THREE.Mesh(torsoGeometry, humanMaterial);
+                torso.position.set(0, 1.4, 0);
+                torso.castShadow = true;
+                dhruvikModel.add(torso);
+                
+                const headGeometry = new THREE.BoxGeometry(0.35, 0.35, 0.35);
+                const head = new THREE.Mesh(headGeometry, humanMaterial);
+                head.position.set(0, 2.1, 0);
+                head.castShadow = true;
+                dhruvikModel.add(head);
+                
+                // Arms
+                const armGeometry = new THREE.BoxGeometry(0.15, 0.7, 0.15);
+                const leftArm = new THREE.Mesh(armGeometry, humanMaterial);
+                leftArm.position.set(-0.45, 1.2, 0);
+                leftArm.castShadow = true;
+                dhruvikModel.add(leftArm);
+                
+                const rightArm = new THREE.Mesh(armGeometry, humanMaterial);
+                rightArm.position.set(0.45, 1.2, 0);
+                rightArm.castShadow = true;
+                dhruvikModel.add(rightArm);
+                
+                // Legs
+                const thighGeometry = new THREE.BoxGeometry(0.2, 0.5, 0.2);
+                const leftThigh = new THREE.Mesh(thighGeometry, humanMaterial);
+                leftThigh.position.set(-0.15, 1.0, 0.25);
+                leftThigh.rotation.x = Math.PI / 2;
+                leftThigh.castShadow = true;
+                dhruvikModel.add(leftThigh);
+                
+                const rightThigh = new THREE.Mesh(thighGeometry, humanMaterial);
+                rightThigh.position.set(0.15, 1.0, 0.25);
+                rightThigh.rotation.x = Math.PI / 2;
+                rightThigh.castShadow = true;
+                dhruvikModel.add(rightThigh);
+                
+                const shinGeometry = new THREE.BoxGeometry(0.15, 0.4, 0.15);
+                const leftShin = new THREE.Mesh(shinGeometry, humanMaterial);
+                leftShin.position.set(-0.15, 0.6, 0.5);
+                leftShin.castShadow = true;
+                dhruvikModel.add(leftShin);
+                
+                const rightShin = new THREE.Mesh(shinGeometry, humanMaterial);
+                rightShin.position.set(0.15, 0.6, 0.5);
+                rightShin.castShadow = true;
+                dhruvikModel.add(rightShin);
+                
+                const footGeometry = new THREE.BoxGeometry(0.15, 0.1, 0.25);
+                const leftFoot = new THREE.Mesh(footGeometry, humanMaterial);
+                leftFoot.position.set(-0.15, 0.35, 0.6);
+                leftFoot.castShadow = true;
+                dhruvikModel.add(leftFoot);
+                
+                const rightFoot = new THREE.Mesh(footGeometry, humanMaterial);
+                rightFoot.position.set(0.15, 0.35, 0.6);
+                rightFoot.castShadow = true;
+                dhruvikModel.add(rightFoot);
+                
+                dhruvikModel.position.set(0, 0, 0);
+                dhruvikModel.scale.set(1.5, 1.5, 1.5);
+                scene.add(dhruvikModel);
+                needsRender = true;
             }
             
-            // Scene
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xfefefe);
-            scene.fog = new THREE.Fog(0xfefefe, 50, 200);
-            
-            // Camera - Isometric view
-            camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(20, 20, 20);
-            camera.lookAt(0, 2, 0);
-            
-            // Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.BasicShadowMap; // Hard shadows instead of soft
-            renderer.outputColorSpace = THREE.SRGBColorSpace;
-            document.body.appendChild(renderer.domElement);
-            
-            // Setup orbit controls
-            controls = new OrbitControls(camera, renderer.domElement);
-            controls.target.set(0, 2, 0); // Look at the model center
-            controls.enableDamping = true; // Smooth movement
-            controls.dampingFactor = 0.05;
-            controls.enablePan = false; // Disable panning
-            controls.enableZoom = true; // Enable zoom
-            controls.enableRotate = true; // Enable orbit
-            controls.minDistance = 10; // Minimum zoom distance
-            controls.maxDistance = 100; // Maximum zoom distance
-            controls.maxPolarAngle = Math.PI * 0.9; // Prevent camera from going below ground
-            controls.autoRotate = false; // No auto rotation
-            controls.update();
-            
-            // Lighting
-            setupLighting();
-            
-            // Create the scene elements
-            createGround();
-            loadModels();
-            
-            // Start animation
-            animate();
-            
-            // Handle window resize
-            window.addEventListener('resize', onWindowResize, false);
-            
-            // Add timeout fallback to ensure loading screen disappears
-            setTimeout(() => {
-                console.log('Timeout reached - forcing loading screen to hide');
+            function hideLoading() {
                 const loadingElement = document.getElementById('loading');
                 if (loadingElement) {
-                    loadingElement.style.display = 'none';
-                }
-            }, 5000); // 5 second timeout
-            
-            // Also add a shorter timeout for basic scene setup
-            setTimeout(() => {
-                if (!modelsLoaded.human && !modelsLoaded.chair) {
-                    console.log('Models taking too long - creating fallbacks');
-                    createCombinedFallback();
-                    modelsLoaded.human = true;
-                    modelsLoaded.chair = true;
-                    checkModelsLoaded();
-                }
-            }, 2000); // 2 second timeout for fallbacks
-        }
-        
-        function setupLighting() {
-            // Reduced ambient light for harsher contrast
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
-            scene.add(ambientLight);
-            
-            // Main directional light (sun) - much more intense
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
-            directionalLight.position.set(25, 40, 15);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 4096;
-            directionalLight.shadow.mapSize.height = 4096;
-            directionalLight.shadow.camera.near = 0.5;
-            directionalLight.shadow.camera.far = 150;
-            directionalLight.shadow.camera.left = -40;
-            directionalLight.shadow.camera.right = 40;
-            directionalLight.shadow.camera.top = 40;
-            directionalLight.shadow.camera.bottom = -40;
-            directionalLight.shadow.bias = -0.0001;
-            directionalLight.shadow.radius = 1; // Sharp shadows
-            scene.add(directionalLight);
-            
-            // Remove soft fill light for harsher shadows
-            // const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
-            // fillLight.position.set(-10, 10, -10);
-            // scene.add(fillLight);
-        }
-        
-        function createGround() {
-            // Infinite white ground plane - much larger
-            const groundGeometry = new THREE.PlaneGeometry(500, 500);
-            const groundMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xffffff,
-                transparent: true,
-                opacity: 0.8
-            });
-            ground = new THREE.Mesh(groundGeometry, groundMaterial);
-            ground.rotation.x = -Math.PI / 2;
-            ground.receiveShadow = true;
-            scene.add(ground);
-            
-            // Much larger and denser grid for better coverage
-            const gridHelper = new THREE.GridHelper(200, 200, 0xf0f0f0, 0xf0f0f0);
-            gridHelper.material.transparent = true;
-            gridHelper.material.opacity = 0.3;
-            scene.add(gridHelper);
-        }
-        
-        function loadModels() {
-            // GLTFLoader for Three.js r176 - using the global reference
-            const loader = new GLTFLoader();
-            
-            // Load the combined Dhruvik model (human + stool)
-            loader.load(
-                'models/Dhruvik.glb',
-                function(gltf) {
-                    console.log('Dhruvik model loaded:', gltf);
-                    dhruvikModel = gltf.scene;
-                    
-                    // Configure the combined model
-                    dhruvikModel.traverse(function(child) {
-                        if (child.isMesh) {
-                            // Apply materials based on the mesh name or keep original
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                        }
-                    });
-                    
-                    // Position and scale the combined model
-                    dhruvikModel.position.set(0, 0, 0);
-                    dhruvikModel.scale.set(1.5, 1.5, 1.5);
-                    dhruvikModel.rotation.y = 0;
-                    
-                    scene.add(dhruvikModel);
-                    console.log('Dhruvik model added to scene');
-                    
-                    // Mark both human and chair as loaded since it's a combined model
-                    modelsLoaded.human = true;
-                    modelsLoaded.chair = true;
-                    checkModelsLoaded();
-                },
-                function(progress) {
-                    console.log('Dhruvik loading progress:', (progress.loaded / progress.total * 100) + '%');
-                },
-                function(error) {
-                    console.error('Error loading Dhruvik model:', error);
-                    // Fallback to a combined geometric model
-                    createCombinedFallback();
-                    modelsLoaded.human = true;
-                    modelsLoaded.chair = true;
-                    checkModelsLoaded();
-                }
-            );
-        }
-        
-        function createCombinedFallback() {
-            console.log('Creating combined fallback model (human + stool)');
-            dhruvikModel = new THREE.Group();
-            
-            const humanMaterial = new THREE.MeshStandardMaterial({
-                color: 0xf8f8f8,
-                flatShading: true,
-                roughness: 0.8,
-                metalness: 0.1
-            });
-            
-            const stoolMaterial = new THREE.MeshStandardMaterial({
-                color: 0x222222,
-                flatShading: true,
-                roughness: 0.7,
-                metalness: 0.1
-            });
-            
-            // Create the stool first
-            // Stool seat
-            const seatGeometry = new THREE.BoxGeometry(1.2, 0.1, 1.2);
-            const seat = new THREE.Mesh(seatGeometry, stoolMaterial);
-            seat.position.set(0, 0.8, 0);
-            seat.castShadow = true;
-            dhruvikModel.add(seat);
-            
-            // Add stool legs
-            const legGeometry = new THREE.BoxGeometry(0.08, 0.8, 0.08);
-            for (let i = 0; i < 4; i++) {
-                const leg = new THREE.Mesh(legGeometry, stoolMaterial);
-                const x = (i % 2) * 1.0 - 0.5;
-                const z = Math.floor(i / 2) * 1.0 - 0.5;
-                leg.position.set(x, 0.4, z);
-                leg.castShadow = true;
-                dhruvikModel.add(leg);
-            }
-            
-            // Create the sitting human
-            // Torso - sitting upright
-            const torsoGeometry = new THREE.BoxGeometry(0.6, 1.0, 0.3);
-            const torso = new THREE.Mesh(torsoGeometry, humanMaterial);
-            torso.position.set(0, 1.4, 0);
-            torso.castShadow = true;
-            dhruvikModel.add(torso);
-            
-            // Head
-            const headGeometry = new THREE.BoxGeometry(0.35, 0.35, 0.35);
-            const head = new THREE.Mesh(headGeometry, humanMaterial);
-            head.position.set(0, 2.1, 0);
-            head.castShadow = true;
-            dhruvikModel.add(head);
-            
-            // Arms - relaxed at sides
-            const armGeometry = new THREE.BoxGeometry(0.15, 0.7, 0.15);
-            
-            const leftArm = new THREE.Mesh(armGeometry, humanMaterial);
-            leftArm.position.set(-0.45, 1.2, 0);
-            leftArm.castShadow = true;
-            dhruvikModel.add(leftArm);
-            
-            const rightArm = new THREE.Mesh(armGeometry, humanMaterial);
-            rightArm.position.set(0.45, 1.2, 0);
-            rightArm.castShadow = true;
-            dhruvikModel.add(rightArm);
-            
-            // Upper legs (thighs) - horizontal for sitting
-            const thighGeometry = new THREE.BoxGeometry(0.2, 0.5, 0.2);
-            
-            const leftThigh = new THREE.Mesh(thighGeometry, humanMaterial);
-            leftThigh.position.set(-0.15, 1.0, 0.25);
-            leftThigh.rotation.x = Math.PI / 2; // Rotate to be horizontal
-            leftThigh.castShadow = true;
-            dhruvikModel.add(leftThigh);
-            
-            const rightThigh = new THREE.Mesh(thighGeometry, humanMaterial);
-            rightThigh.position.set(0.15, 1.0, 0.25);
-            rightThigh.rotation.x = Math.PI / 2; // Rotate to be horizontal
-            rightThigh.castShadow = true;
-            dhruvikModel.add(rightThigh);
-            
-            // Lower legs (shins) - vertical, hanging down
-            const shinGeometry = new THREE.BoxGeometry(0.15, 0.4, 0.15);
-            
-            const leftShin = new THREE.Mesh(shinGeometry, humanMaterial);
-            leftShin.position.set(-0.15, 0.6, 0.5);
-            leftShin.castShadow = true;
-            dhruvikModel.add(leftShin);
-            
-            const rightShin = new THREE.Mesh(shinGeometry, humanMaterial);
-            rightShin.position.set(0.15, 0.6, 0.5);
-            rightShin.castShadow = true;
-            dhruvikModel.add(rightShin);
-            
-            // Feet
-            const footGeometry = new THREE.BoxGeometry(0.15, 0.1, 0.25);
-            
-            const leftFoot = new THREE.Mesh(footGeometry, humanMaterial);
-            leftFoot.position.set(-0.15, 0.35, 0.6);
-            leftFoot.castShadow = true;
-            dhruvikModel.add(leftFoot);
-            
-            const rightFoot = new THREE.Mesh(footGeometry, humanMaterial);
-            rightFoot.position.set(0.15, 0.35, 0.6);
-            rightFoot.castShadow = true;
-            dhruvikModel.add(rightFoot);
-            
-            // Position the entire combined model
-            dhruvikModel.position.set(0, 0, 0);
-            dhruvikModel.scale.set(1.5, 1.5, 1.5);
-            scene.add(dhruvikModel);
-            console.log('Combined fallback model created and added to scene');
-        }
-        
-        function checkModelsLoaded() {
-            console.log('Checking models loaded:', modelsLoaded);
-            
-            // Hide loading indicator if both models are loaded or if we're forcing it
-            if (modelsLoaded.human && modelsLoaded.chair) {
-                const loadingElement = document.getElementById('loading');
-                if (loadingElement) {
-                    loadingElement.style.display = 'none';
-                    console.log('All models loaded - hiding loading screen');
+                    loadingElement.style.opacity = '0';
+                    loadingElement.style.transition = 'opacity 0.5s ease';
+                    setTimeout(() => {
+                        loadingElement.style.display = 'none';
+                    }, 500);
                 }
             }
-        }
-        
-        function animate() {
-            requestAnimationFrame(animate);
             
-            // Update orbit controls
-            controls.update();
-            
-            // Subtle breathing animation for the model only
-            if (dhruvikModel) {
-                // Very gentle breathing effect
-                const breathingScale = 1.5 + Math.sin(Date.now() * 0.001) * 0.01;
-                dhruvikModel.scale.set(breathingScale, breathingScale, breathingScale);
+            // Smart animation loop - only renders when needed
+            function startSmartAnimation() {
+                let lastTime = 0;
+                let breathingPhase = 0;
+                
+                function smartAnimate(currentTime) {
+                    animationId = requestAnimationFrame(smartAnimate);
+                    
+                    // Update controls
+                    if (controls.enabled) {
+                        controls.update();
+                    }
+                    
+                    // Breathing animation (reduced frequency)
+                    if (dhruvikModel && currentTime - lastTime > 50) { // 20fps instead of 60fps for breathing
+                        breathingPhase += 0.001;
+                        const breathingScale = 1.5 + Math.sin(breathingPhase) * 0.008; // Reduced breathing effect
+                        dhruvikModel.scale.set(breathingScale, breathingScale, breathingScale);
+                        needsRender = true;
+                        lastTime = currentTime;
+                    }
+                    
+                    // Only render if something changed
+                    if (needsRender) {
+                        renderer.render(scene, camera);
+                        needsRender = false;
+                    }
+                }
+                
+                smartAnimate();
             }
             
-            renderer.render(scene, camera);
-        }
-        
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            controls.update();
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                needsRender = true;
+            }
+            
+            // Initialize immediately
+            init();
+            
+        } catch (error) {
+            console.error('Failed to load Three.js modules:', error);
+            document.getElementById('loading').innerHTML = 'Error: Failed to load 3D engine';
         }
     </script>
 </body>
