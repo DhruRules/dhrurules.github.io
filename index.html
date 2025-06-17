@@ -273,7 +273,7 @@
             
             function setupLighting() {
                 // Reduced ambient light for better contrast
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
                 scene.add(ambientLight);
                 
                 // Optimized directional light with reduced shadow quality
@@ -296,8 +296,8 @@
             }
             
             function createGround() {
-                // Smaller, more efficient ground plane
-                const groundGeometry = new THREE.PlaneGeometry(200, 200);
+                // Efficient ground plane sized to always fill view
+                const groundGeometry = new THREE.PlaneGeometry(140, 140);
                 const groundMaterial = new THREE.MeshLambertMaterial({ 
                     color: 0xffffff,
                     transparent: true,
@@ -309,7 +309,7 @@
                 scene.add(ground);
                 
                 // Optimized grid with fewer divisions
-                const gridHelper = new THREE.GridHelper(100, 50, 0xf0f0f0, 0xf0f0f0); // Reduced from 200, 200
+                const gridHelper = new THREE.GridHelper(140, 75, 0xf0f0f0, 0xf0f0f0); // Reduced from 200, 200
                 gridHelper.material.transparent = true;
                 gridHelper.material.opacity = 0.2;
                 scene.add(gridHelper);
