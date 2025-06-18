@@ -84,36 +84,7 @@
             font-weight: 400;
         }
         
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #666;
-            font-size: 1.2em;
-            font-weight: 400;
-            z-index: 200;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .loading-bar {
-            width: 200px;
-            height: 2px;
-            background: #eee;
-            border-radius: 1px;
-            overflow: hidden;
-        }
-        
-        .loading-progress {
-            height: 100%;
-            background: #666;
-            border-radius: 1px;
-            transition: width 0.3s ease;
-            width: 0%;
-        }
+
         
         .controls-hint {
             position: absolute;
@@ -143,13 +114,6 @@
     </style>
 </head>
 <body>
-    <div id="loading">
-        <div>Loading...</div>
-        <div class="loading-bar">
-            <div class="loading-progress" id="loading-progress"></div>
-        </div>
-    </div>
-    
     <div id="ui-container">
         <div id="intro-text">
             <h1>Dhruvik Patel</h1>
@@ -178,15 +142,10 @@
         // Performance monitoring
         const perfStart = performance.now();
         
-        // Loading progress tracking
-        let loadingProgress = 0;
-        const progressBar = document.getElementById('loading-progress');
-        
+        // Loading progress tracking (simplified)
         function updateProgress(progress) {
-            loadingProgress = Math.max(loadingProgress, progress);
-            if (progressBar) {
-                progressBar.style.width = loadingProgress + '%';
-            }
+            // Progress tracking for internal use only - no UI updates
+            console.log(`Loading progress: ${progress}%`);
         }
         
         updateProgress(10); // Initial progress
@@ -214,7 +173,7 @@
                 // Scene with minimal fog for better performance
                 scene = new THREE.Scene();
                 scene.background = new THREE.Color(0xfefefe);
-                scene.fog = new THREE.Fog(0xfefefe, 80, 150); // Reduced fog range
+                scene.fog = new THREE.Fog(0xfefefe, 130, 150); // Reduced fog range
                 
                 // Camera - optimized FOV
                 camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 200);
@@ -276,7 +235,7 @@
                 const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
                 scene.add(ambientLight);
                 
-                // Optimized directional light with reduced shadow quality
+                // Harsh directional light for strong shadows
                 const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
                 directionalLight.position.set(25, 40, 15);
                 directionalLight.castShadow = true;
@@ -296,8 +255,8 @@
             }
             
             function createGround() {
-                // Efficient ground plane sized to always fill view
-                const groundGeometry = new THREE.PlaneGeometry(140, 140);
+                // Smaller, more efficient ground plane
+                const groundGeometry = new THREE.PlaneGeometry(300, 300);
                 const groundMaterial = new THREE.MeshLambertMaterial({ 
                     color: 0xffffff,
                     transparent: true,
@@ -309,7 +268,7 @@
                 scene.add(ground);
                 
                 // Optimized grid with fewer divisions
-                const gridHelper = new THREE.GridHelper(140, 75, 0xf0f0f0, 0xf0f0f0); // Reduced from 200, 200
+                const gridHelper = new THREE.GridHelper(250, 175, 0xf0f0f0, 0xf0f0f0); // Reduced from 200, 200
                 gridHelper.material.transparent = true;
                 gridHelper.material.opacity = 0.2;
                 scene.add(gridHelper);
@@ -462,14 +421,7 @@
             }
             
             function hideLoading() {
-                const loadingElement = document.getElementById('loading');
-                if (loadingElement) {
-                    loadingElement.style.opacity = '0';
-                    loadingElement.style.transition = 'opacity 0.5s ease';
-                    setTimeout(() => {
-                        loadingElement.style.display = 'none';
-                    }, 500);
-                }
+                // Loading element removed - no action needed
             }
             
             // Smart animation loop - only renders when needed
@@ -516,7 +468,7 @@
             
         } catch (error) {
             console.error('Failed to load Three.js modules:', error);
-            document.getElementById('loading').innerHTML = 'Error: Failed to load 3D engine';
+            // No loading element to update - error logged to console
         }
     </script>
 </body>
