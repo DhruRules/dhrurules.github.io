@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal - Dhruvik Patel</title>
+    <meta property="og:type" content="website">
+    <meta name="description" content="Thoughts and reflections by Dhruvik Patel">
+    
+    <!-- DNS prefetch for performance -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fefefe;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        .nav-home {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            font-size: 0.9em;
+            color: #888;
+            text-decoration: none;
+            z-index: 100;
+            transition: color 0.2s ease;
+        }
+        
+        .nav-home:hover {
+            color: #333;
+        }
+        
+        .masthead {
+            height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 8vw;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
+        }
+        
+        .masthead h1 {
+            font-size: clamp(3rem, 8vw, 8rem);
+            font-weight: 300;
+            line-height: 1;
+            letter-spacing: -0.02em;
+            color: #222;
+            margin-bottom: 2rem;
+        }
+        
+        .masthead-subtitle {
+            font-size: clamp(1.1rem, 2.5vw, 1.8rem);
+            font-weight: 400;
+            color: #666;
+            max-width: 50%;
+            line-height: 1.4;
+        }
+        
+        .journal-container {
+            display: grid;
+            grid-template-columns: 1fr 3fr 1fr;
+            gap: 4vw;
+            padding: 8vw;
+            min-height: 100vh;
+        }
+        
+        .sidebar-left {
+            position: sticky;
+            top: 8vw;
+            height: fit-content;
+        }
+        
+        .date-marker {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: clamp(0.8rem, 1.5vw, 1rem);
+            font-weight: 300;
+            color: #aaa;
+            letter-spacing: 0.2em;
+            margin-bottom: 4rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .date-marker.active {
+            opacity: 1;
+        }
+        
+        .main-content {
+            max-width: none;
+        }
+        
+        .entry {
+            margin-bottom: 12vw;
+            position: relative;
+        }
+        
+        .entry-title {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 500;
+            line-height: 1.1;
+            color: #222;
+            margin-bottom: 3rem;
+            letter-spacing: -0.02em;
+        }
+        
+        .entry-title a {
+            color: #222;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .entry-title a:hover {
+            opacity: 0.7;
+        }
+        
+        .entry-lead {
+            font-size: clamp(1.3rem, 3vw, 2rem);
+            font-weight: 300;
+            line-height: 1.3;
+            color: #555;
+            margin-bottom: 3rem;
+            font-style: italic;
+        }
+        
+        .entry-content {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            line-height: 1.7;
+            color: #444;
+        }
+        
+        .entry-content p {
+            margin-bottom: 2rem;
+        }
+        
+        .entry-content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .entry-number {
+            position: absolute;
+            right: -2vw;
+            top: 0;
+            font-size: clamp(8rem, 15vw, 12rem);
+            font-weight: 300;
+            color: #f8f8f8;
+            line-height: 1;
+            z-index: -1;
+        }
+        
+        .sidebar-right {
+            position: sticky;
+            top: 8vw;
+            height: fit-content;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .reading-progress {
+            width: 2px;
+            height: 60vh;
+            background: #f0f0f0;
+            position: relative;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            background: #333;
+            height: 0%;
+            transition: height 0.1s ease;
+        }
+        
+        .coming-soon {
+            text-align: center;
+            padding: 8vw 0;
+            grid-column: 2;
+        }
+        
+        .coming-soon h2 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 300;
+            color: #aaa;
+            margin-bottom: 1rem;
+        }
+        
+        .coming-soon p {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: #ccc;
+            font-weight: 300;
+        }
+        
+        @media (max-width: 1024px) {
+            .journal-container {
+                grid-template-columns: 1fr;
+                gap: 2vw;
+                padding: 6vw;
+            }
+            
+            .sidebar-left,
+            .sidebar-right {
+                display: none;
+            }
+            
+            .masthead-subtitle {
+                max-width: 80%;
+            }
+            
+            .entry {
+                margin-bottom: 8vw;
+            }
+            
+
+            
+            .coming-soon {
+                grid-column: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-home {
+                top: 20px;
+                right: 20px;
+            }
+            
+            .masthead {
+                padding: 0 4vw;
+                height: 50vh;
+            }
+            
+            .journal-container {
+                padding: 4vw;
+            }
+            
+            .masthead-subtitle {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="nav-home">← Back</a>
+    
+    <header class="masthead">
+        <h1>Journal</h1>
+        <div class="masthead-subtitle">Reflections at the intersection of technology and the human condition</div>
+    </header>
+    
+    <div class="journal-container">
+        <aside class="sidebar-left">
+            <div class="date-marker" data-month="jun-2025">JUN 2025</div>
+            <div class="date-marker" data-month="may-2025">MAY 2025</div>
+        </aside>
+        
+        <main class="main-content">
+            <article class="entry" data-month="jun-2025">
+                <div class="entry-number">03</div>
+                <h2 class="entry-title"><a href="#">The Space Between Pixels</a></h2>
+                <div class="entry-lead">Every interface is a conversation between human intention and digital possibility.</div>
+                <div class="entry-content">
+                    <p>Working on this portfolio has reminded me that the most important design decisions happen in the spaces we don't see—the algorithms that determine motion, the mathematics that create depth, the careful choreography of when elements appear and disappear.</p>
+                    <p>We've become so focused on what users see that we sometimes forget about what they feel. The weight of a click, the anticipation of a transition, the satisfaction of an object responding to touch in just the right way.</p>
+                </div>
+            </article>
+            
+            <article class="entry" data-month="may-2025">
+                <div class="entry-number">02</div>
+                <h2 class="entry-title"><a href="#">On Digital Minimalism</a></h2>
+                <div class="entry-lead">In an age of endless digital noise, there's something profound about creating with intention.</div>
+                <div class="entry-content">
+                    <p>This portfolio itself is an exercise in restraint—every element serves a purpose, every animation has meaning. The beauty of minimalism isn't in what you remove, but in how clearly what remains can speak.</p>
+                    <p>When we strip away the unnecessary, we create space for the essential to breathe. In code, in design, in life—the principle remains constant: intentionality over abundance.</p>
+                </div>
+            </article>
+            
+            <article class="entry" data-month="may-2025">
+                <div class="entry-number">01</div>
+                <h2 class="entry-title"><a href="#">Building in Three Dimensions</a></h2>
+                <div class="entry-lead">Working with Three.js has taught me that the web is no longer confined to flat surfaces.</div>
+                <div class="entry-content">
+                    <p>We can create depth, atmosphere, and emotion through virtual space. Each project becomes an opportunity to blur the line between digital and physical reality.</p>
+                    <p>The challenge isn't just technical—it's conceptual. How do we design interfaces that feel natural in three dimensions? How do we guide users through space that exists only in memory and mathematics?</p>
+                </div>
+            </article>
+            
+            <div class="coming-soon">
+                <h2>More thoughts forthcoming</h2>
+            </div>
+        </main>
+        
+        <aside class="sidebar-right">
+            <div class="reading-progress">
+                <div class="progress-bar"></div>
+            </div>
+        </aside>
+    </div>
+    
+    <script>
+        // Reading progress and date marker functionality
+        function updatePageElements() {
+            // Update reading progress
+            const scrollPercent = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+            const progressBar = document.querySelector('.progress-bar');
+            if (progressBar) {
+                progressBar.style.height = Math.min(scrollPercent, 100) + '%';
+            }
+            
+            // Update date markers based on visible entries
+            const entries = document.querySelectorAll('.entry[data-month]');
+            const dateMarkers = document.querySelectorAll('.date-marker[data-month]');
+            
+            // Hide all date markers first
+            dateMarkers.forEach(marker => marker.classList.remove('active'));
+            
+            // Find which entry is most visible
+            let mostVisibleEntry = null;
+            let maxVisibility = 0;
+            
+            entries.forEach(entry => {
+                const rect = entry.getBoundingClientRect();
+                const windowHeight = window.innerHeight;
+                
+                // Calculate how much of the entry is visible
+                const entryTop = Math.max(0, rect.top);
+                const entryBottom = Math.min(windowHeight, rect.bottom);
+                const visibleHeight = Math.max(0, entryBottom - entryTop);
+                const visibilityPercent = visibleHeight / windowHeight;
+                
+                if (visibilityPercent > maxVisibility) {
+                    maxVisibility = visibilityPercent;
+                    mostVisibleEntry = entry;
+                }
+            });
+            
+            // Show the date marker for the most visible entry
+            if (mostVisibleEntry) {
+                const month = mostVisibleEntry.getAttribute('data-month');
+                const correspondingMarker = document.querySelector(`.date-marker[data-month="${month}"]`);
+                if (correspondingMarker) {
+                    correspondingMarker.classList.add('active');
+                }
+            }
+        }
+        
+        // Update on scroll and initial load
+        window.addEventListener('scroll', updatePageElements);
+        window.addEventListener('load', updatePageElements);
+        
+        // Also update after a short delay to ensure proper initialization
+        setTimeout(updatePageElements, 100);
+    </script>
+</body>
+</html> 

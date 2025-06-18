@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://dhruvikp.com/sitemap.xml
+
+# Optional: Crawl-delay for politeness (1 second)
+Crawl-delay: 1 

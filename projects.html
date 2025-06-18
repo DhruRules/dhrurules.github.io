@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects - Dhruvik Patel</title>
+    <meta property="og:type" content="website">
+    <meta name="description" content="Projects by Dhruvik Patel">
+    
+    <!-- DNS prefetch for performance -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fefefe;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        .nav-home {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            font-size: 0.9em;
+            color: #888;
+            text-decoration: none;
+            z-index: 100;
+            transition: color 0.2s ease;
+        }
+        
+        .nav-home:hover {
+            color: #333;
+        }
+        
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 8vw;
+            position: relative;
+        }
+        
+        .hero-content {
+            max-width: 60vw;
+        }
+        
+        .hero h1 {
+            font-size: clamp(4rem, 12vw, 12rem);
+            font-weight: 600;
+            line-height: 0.85;
+            letter-spacing: -0.05em;
+            color: #222;
+            margin-bottom: 2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: clamp(1.2rem, 3vw, 2.5rem);
+            font-weight: 300;
+            color: #666;
+            line-height: 1.2;
+        }
+        
+        .projects-grid {
+            min-height: 100vh;
+            padding: 8vw;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-gap: 2vw;
+            align-items: start;
+        }
+        
+        .project {
+            grid-column: span 12;
+            margin-bottom: 8vw;
+            position: relative;
+        }
+        
+        .project:nth-child(1) {
+            grid-column: 1 / 8;
+            margin-top: 4vw;
+        }
+        
+        .project:nth-child(2) {
+            grid-column: 6 / 13;
+            margin-top: -2vw;
+        }
+        
+        .project:nth-child(3) {
+            grid-column: 2 / 9;
+            margin-top: 2vw;
+        }
+        
+        .project-number {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            font-weight: 300;
+            color: #999;
+            margin-bottom: 1rem;
+            letter-spacing: 0.1em;
+        }
+        
+        .project h2 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            color: #222;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+        
+        .project h2 a {
+            color: #222;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .project h2 a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: #333;
+            transition: width 0.3s ease;
+        }
+        
+        .project h2 a:hover::after {
+            width: 100%;
+        }
+        
+        .project-meta {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: #888;
+            margin-bottom: 2rem;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+        
+        .project-description {
+            font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+            color: #555;
+            line-height: 1.4;
+            margin-bottom: 2rem;
+            max-width: 80%;
+        }
+        
+        .project-tech {
+            font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+            color: #999;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+        }
+        
+        .coming-soon {
+            grid-column: 4 / 10;
+            text-align: center;
+            padding: 6vw 0;
+            margin-top: 4vw;
+        }
+        
+        .coming-soon h2 {
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            font-weight: 300;
+            color: #aaa;
+            margin-bottom: 1rem;
+        }
+        
+        .coming-soon p {
+            font-size: clamp(1rem, 2vw, 1.3rem);
+            color: #ccc;
+            font-weight: 300;
+        }
+        
+        @media (max-width: 1024px) {
+            .hero {
+                padding-left: 6vw;
+            }
+            
+            .hero-content {
+                max-width: 80vw;
+            }
+            
+            .projects-grid {
+                padding: 6vw;
+                grid-template-columns: 1fr;
+            }
+            
+            .project,
+            .project:nth-child(1),
+            .project:nth-child(2),
+            .project:nth-child(3) {
+                grid-column: 1;
+                margin-top: 0;
+                margin-bottom: 12vw;
+            }
+            
+            .project-description {
+                max-width: 100%;
+            }
+            
+            .coming-soon {
+                grid-column: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-home {
+                top: 20px;
+                left: 20px;
+            }
+            
+            .hero {
+                padding-left: 4vw;
+                height: 80vh;
+            }
+            
+            .projects-grid {
+                padding: 4vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="nav-home">← Back</a>
+    
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Projects</h1>
+            <div class="hero-subtitle">Selected work exploring the intersection of science, engineering, and humanity</div>
+        </div>
+    </section>
+    
+    <section class="projects-grid">
+        <article class="project">
+            <div class="project-number">01</div>
+            <h2><a href="ozymandias.html">Ozymandias: Neon Ruins</a></h2>
+            <div class="project-meta">Interactive Experience • 2025</div>
+            <div class="project-description">
+                An immersive digital wasteland inspired by Shelley's poem. Navigate through cyberpunk ruins as sound and visuals merge to create a meditation on impermanence and digital decay.
+            </div>
+            <div class="project-tech">Three.js / Tone.js / WebGL / Spatial Audio</div>
+        </article>
+        
+        <article class="project">
+            <div class="project-number">02</div>
+            <h2><a href="index.html">Portfolio: Spatial Interface</a></h2>
+            <div class="project-meta">Web Development • 2025</div>
+            <div class="project-description">
+                A performance-optimized portfolio that breaks free from flat design. 3D navigation elements float in virtual space, creating an interface that feels both minimal and dimensionally rich.
+            </div>
+            <div class="project-tech">Three.js / Performance Optimization / 3D Interface Design</div>
+        </article>
+        
+        <div class="coming-soon">
+            <h2>More explorations in progress</h2>
+        </div>
+    </section>
+</body>
+</html> 

@@ -84,7 +84,48 @@
             font-weight: 400;
         }
         
-
+        /* Ground-based navigation links */
+        #navigation-links {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .ground-link {
+            position: absolute;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #333;
+            text-decoration: none;
+            pointer-events: auto;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.00);
+            padding: 6px 12px;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            visibility: hidden;
+            user-select: none;
+        }
+        
+        .ground-link:hover {
+            color: #000;
+            background: rgba(255, 255, 255, 0.95);
+            transform: translate(-50%, -50%) translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .ground-link.visible {
+            opacity: 0.8;
+            visibility: visible;
+        }
         
         .controls-hint {
             position: absolute;
@@ -119,6 +160,14 @@
             <h1>Dhruvik Patel</h1>
             <p class="subtitle">Student, Designer, Scientist, Engineer, Future Doctor</p>
             <p class="contact">dhruvik@dhruvikp.com</p>
+        </div>
+        
+        <!-- Navigation links positioned on the 3D ground -->
+        <div id="navigation-links">
+            <a href="projects.html" class="ground-link" data-world-x="-10" data-world-y="0" data-world-z="-7">Projects</a>
+            <a href="journal.html" class="ground-link" data-world-x="-5" data-world-y="0" data-world-z="6">Journal</a>
+            <a href="#" class="ground-link" data-world-x="4" data-world-y="0" data-world-z="-7">About</a>
+            <a href="#" class="ground-link" data-world-x="6" data-world-y="0" data-world-z="4">Contact</a>
         </div>
         
         <div class="controls-hint">
@@ -165,6 +214,10 @@
             let dhruvikModel;
             let needsRender = true;
             let animationId;
+            
+            // Navigation links system
+            let navigationLinks = [];
+            let linkElements = [];
             
             // Performance-optimized initialization
             function init() {
@@ -220,6 +273,9 @@
                 // Create scene elements
                 createGround();
                 loadModel();
+                
+                // Initialize navigation links
+                initNavigationLinks();
                 
                 // Start smart animation loop
                 startSmartAnimation();
@@ -420,6 +476,50 @@
                 needsRender = true;
             }
             
+            // Initialize navigation links system
+            function initNavigationLinks() {
+                linkElements = document.querySelectorAll('.ground-link');
+                
+                linkElements.forEach(element => {
+                    const worldX = parseFloat(element.getAttribute('data-world-x'));
+                    const worldY = parseFloat(element.getAttribute('data-world-y'));
+                    const worldZ = parseFloat(element.getAttribute('data-world-z'));
+                    
+                    navigationLinks.push({
+                        element: element,
+                        worldPosition: new THREE.Vector3(worldX, worldY, worldZ),
+                        screenPosition: new THREE.Vector2()
+                    });
+                });
+            }
+            
+            // Update navigation links positions
+            function updateNavigationLinks() {
+                if (!camera || navigationLinks.length === 0) return;
+                
+                navigationLinks.forEach(link => {
+                    // Convert world position to screen coordinates
+                    const screenPos = link.worldPosition.clone();
+                    screenPos.project(camera);
+                    
+                    // Convert to pixel coordinates
+                    const x = (screenPos.x * 0.5 + 0.5) * window.innerWidth;
+                    const y = (screenPos.y * -0.5 + 0.5) * window.innerHeight;
+                    
+                    // Check if link is in front of camera and within reasonable distance
+                    const distance = camera.position.distanceTo(link.worldPosition);
+                    const isVisible = screenPos.z < 1 && distance < 60 && distance > 5;
+                    
+                    if (isVisible) {
+                        link.element.style.left = x + 'px';
+                        link.element.style.top = y + 'px';
+                        link.element.classList.add('visible');
+                    } else {
+                        link.element.classList.remove('visible');
+                    }
+                });
+            }
+            
             function hideLoading() {
                 // Loading element removed - no action needed
             }
@@ -436,6 +536,9 @@
                     if (controls.enabled) {
                         controls.update();
                     }
+                    
+                    // Update navigation links positions
+                    updateNavigationLinks();
                     
                     // Breathing animation (reduced frequency)
                     if (dhruvikModel && currentTime - lastTime > 50) { // 20fps instead of 60fps for breathing
@@ -460,6 +563,7 @@
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
+                updateNavigationLinks(); // Update link positions on resize
                 needsRender = true;
             }
             
