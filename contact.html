@@ -44,7 +44,19 @@
         .nav-home:hover {
             color: #333;
         }
-
+        
+        /* Minimap navbar (lightweight, inline) */
+         .minimap { position: fixed; top: 40px; left: 40px; width: 120px; height: 120px; z-index: 300; pointer-events: auto; }
+         .minimap .mm-shell { position: absolute; inset: 0; border-radius: 50%; border: none; background: transparent; box-shadow: none; z-index: 0; }
+         .minimap .mm-label { display: none; }
+         .minimap .mm-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+         .minimap .mm-home { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; pointer-events: auto; z-index: 3; }
+         .minimap .mm-ring { position: absolute; border: 1px solid #333; border-radius: 50%; pointer-events: none; z-index: 1; }
+        .minimap .mm-pointer { width: 22px; height: 22px; transition: transform 0.25s ease; }
+        @media (prefers-reduced-motion: reduce) { .minimap .mm-pointer { transition: none !important; } }
+         .minimap .mm-item { position: absolute; width: 36px; height: 36px; border-radius: 999px; background: #fff; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; color: #333; text-decoration: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); z-index: 2; }
+        .minimap .mm-item.is-active { border-color: #111; }
+        
         .contact-grid {
             min-height: 100vh;
             display: grid;
@@ -329,7 +341,46 @@
     </style>
 </head>
 <body>
-    <a href="index.html" class="nav-home">← Back</a>
+     <nav class="minimap" id="minimap" role="navigation" aria-label="Site">
+         <div class="mm-shell"></div>
+
+        <!-- Orbit items -->
+        <a class="mm-item" href="projects.html" data-angle="-90" aria-label="Projects" title="Projects">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="4" y="4" width="6" height="6" rx="1" fill="none" stroke="#333" stroke-width="1.5"/>
+                <rect x="14" y="4" width="6" height="6" rx="1" fill="none" stroke="#333" stroke-width="1.5"/>
+                <rect x="4" y="14" width="6" height="6" rx="1" fill="none" stroke="#333" stroke-width="1.5"/>
+                <rect x="14" y="14" width="6" height="6" rx="1" fill="none" stroke="#333" stroke-width="1.5"/>
+            </svg>
+        </a>
+        <a class="mm-item" href="journal.html" data-angle="180" aria-label="Journal" title="Journal">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 3h11a2 2 0 0 1 2 2v16l-5-3-5 3V5a2 2 0 0 0-2-2z" fill="none" stroke="#333" stroke-width="1.5"/>
+            </svg>
+        </a>
+        <a class="mm-item" href="about.html" data-angle="0" aria-label="About" title="About">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="8" r="3" fill="none" stroke="#333" stroke-width="1.5"/>
+                <path d="M5 20c1.5-4 12.5-4 14 0" fill="none" stroke="#333" stroke-width="1.5"/>
+            </svg>
+        </a>
+        <a class="mm-item" href="contact.html" data-angle="90" aria-label="Contact" title="Contact">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="#333" stroke-width="1.5"/>
+                <path d="M4 7l8 6 8-6" fill="none" stroke="#333" stroke-width="1.5"/>
+            </svg>
+        </a>
+
+        <!-- Center pointer -->
+        <div class="mm-center">
+            <div class="mm-ring" id="mmRing"></div>
+            <a href="index.html" class="mm-home" aria-label="Home">
+                <svg class="mm-pointer" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 4 L16 11 L12 9 L8 11 Z" fill="#fff" stroke="#333" stroke-width="1.5"/>
+                </svg>
+            </a>
+        </div>
+    </nav>
 
     <div class="contact-grid">
         <aside class="column-left">
@@ -371,6 +422,78 @@
     </div>
 
     <script>
+        // Lightweight minimap logic (reused)
+        (function() {
+            const nav = document.getElementById('minimap');
+            if (!nav) return;
+            const items = nav.querySelectorAll('.mm-item');
+            const pointer = nav.querySelector('.mm-pointer');
+            const ring = document.getElementById('mmRing');
+
+            function layoutItems() {
+                const rect = nav.getBoundingClientRect();
+                const cx = rect.width / 2;
+                const cy = rect.height / 2;
+                const itemHalf = 18;
+                const radius = Math.min(cx, cy) - itemHalf - 2;
+                items.forEach(el => {
+                    const deg = Number(el.getAttribute('data-angle')) || 0;
+                    const rad = (deg * Math.PI) / 180;
+                    const x = cx + radius * Math.cos(rad) - itemHalf;
+                    const y = cy + radius * Math.sin(rad) - itemHalf;
+                    el.style.left = x + 'px';
+                    el.style.top = y + 'px';
+                });
+                if (ring) {
+                    const d = radius * 2;
+                    ring.style.width = d + 'px';
+                    ring.style.height = d + 'px';
+                    ring.style.left = (cx - radius) + 'px';
+                    ring.style.top = (cy - radius) + 'px';
+                }
+            }
+
+            function rotatePointerTo(deg) {
+                if (!pointer) return;
+                const normalized = ((deg % 360) + 360) % 360;
+                pointer.style.transform = 'rotate(' + (normalized + 90) + 'deg)';
+            }
+
+            function setActiveFromPath() {
+                const file = (location.pathname.split('/').pop() || '').toLowerCase();
+                let active = null;
+                items.forEach(el => {
+                    const href = (el.getAttribute('href') || '').toLowerCase();
+                    const isActive = href === file;
+                    el.classList.toggle('is-active', isActive);
+                    if (isActive) active = el;
+                });
+                if (!active) {
+                    active = Array.from(items).find(el => (el.getAttribute('href')||'').toLowerCase().includes('contact.html')) || items[0];
+                    if (active) active.classList.add('is-active');
+                }
+                if (active) {
+                    const angle = Number(active.getAttribute('data-angle')) || 0;
+                    rotatePointerTo(angle);
+                    active.setAttribute('aria-current', 'page');
+                }
+            }
+
+            items.forEach(el => {
+                const preview = () => {
+                    const angle = Number(el.getAttribute('data-angle')) || 0;
+                    rotatePointerTo(angle);
+                };
+                el.addEventListener('mouseenter', preview);
+                el.addEventListener('focus', preview);
+                el.addEventListener('mouseleave', setActiveFromPath);
+                el.addEventListener('blur', setActiveFromPath);
+            });
+
+            window.addEventListener('resize', layoutItems, { passive: true });
+            layoutItems();
+            setActiveFromPath();
+        })();
         // Step activation based on visibility
         const steps = document.querySelectorAll('.step');
         const observer = new IntersectionObserver((entries) => {
