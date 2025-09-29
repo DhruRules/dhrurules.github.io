@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Dhruvik Patel</title>
+    <meta property="og:type" content="website">
+    <meta name="description" content="About Dhruvik Patel">
+
+    <!-- DNS prefetch for performance -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fefefe;
+            color: #222;
+            overflow-x: hidden;
+        }
+
+        /* Back link style kept consistent with other pages */
+        .nav-home {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            font-size: 0.9em;
+            color: #888;
+            text-decoration: none;
+            z-index: 200;
+            transition: color 0.2s ease;
+        }
+
+        .nav-home:hover {
+            color: #333;
+        }
+
+        /* Fixed generative background canvas */
+        #constellation {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .about-grid {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 4vw;
+            padding: 8vw;
+            position: relative;
+            z-index: 1;
+        }
+
+        .about-grid::before {
+            /* Subtle grid to echo visual language across pages */
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(to right, rgba(0,0,0,0.035) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0,0,0,0.035) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .column-left {
+            position: sticky;
+            top: 8vw;
+            height: fit-content;
+            align-self: start;
+            padding-right: 2vw;
+        }
+
+        .vertical-word {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: clamp(3rem, 8vw, 8rem);
+            font-weight: 600;
+            color: #222;
+            letter-spacing: 0.08em;
+            line-height: 0.9;
+            margin-bottom: 3rem;
+        }
+
+        .left-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        .left-meta .dot {
+            width: 6px;
+            height: 6px;
+            background: #999;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .column-right {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .hero {
+            min-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 6vw 4vw;
+            position: relative;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .kinetic-title {
+            font-size: clamp(2.5rem, 7vw, 6rem);
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            line-height: 0.95;
+            color: #111;
+            margin-bottom: 1rem;
+        }
+
+        .kinetic-subtitle {
+            font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+            color: #555;
+            max-width: 60ch;
+        }
+
+        .sections {
+            display: grid;
+            gap: 6vw;
+            padding: 6vw 4vw;
+        }
+
+        .movement {
+            min-height: 70vh;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            align-items: start;
+            position: relative;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 6vw;
+        }
+
+        .movement:last-child {
+            border-bottom: 0;
+        }
+
+        .movement-number {
+            font-size: clamp(5rem, 12vw, 10rem);
+            font-weight: 300;
+            color: #f8f8f8;
+            position: absolute;
+            right: -1vw;
+            top: -2vw;
+            line-height: 1;
+            z-index: -1;
+            transform: translateY(20px);
+            opacity: 0.8;
+            transition: transform 0.5s ease, opacity 0.5s ease;
+        }
+
+        .movement.active .movement-number {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .movement h3 {
+            font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            color: #222;
+            line-height: 1.1;
+        }
+
+        .movement p {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: #555;
+            line-height: 1.65;
+            max-width: 60ch;
+        }
+
+
+        .cta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 4vw;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .btn-primary {
+            appearance: none;
+            border: 1px solid #111;
+            background: #111;
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 1rem;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: #000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        
+
+        
+
+        @media (max-width: 1024px) {
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 2vw;
+                padding: 6vw;
+            }
+
+            .column-left {
+                position: relative;
+                top: 0;
+                border-right: none;
+                padding-right: 0;
+                margin-bottom: 4vw;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .vertical-word {
+                writing-mode: horizontal-tb;
+                letter-spacing: -0.02em;
+                line-height: 1;
+                margin-bottom: 0;
+            }
+
+            .movement {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                min-height: auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-home {
+                top: 20px;
+                left: 20px;
+            }
+
+            .about-grid {
+                padding: 4vw;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .movement-number, .btn-primary {
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="nav-home">← Back</a>
+
+    <!-- Generative background (constellation) -->
+    <canvas id="constellation"></canvas>
+
+    <div class="about-grid">
+        <aside class="column-left">
+            <div class="vertical-word">ABOUT</div>
+            <div class="left-meta">
+                <div><span class="dot"></span> Intersections over titles</div>
+                <div><span class="dot"></span> Systems thinking</div>
+                <div><span class="dot"></span> Playful rigor</div>
+            </div>
+        </aside>
+
+        <main class="column-right">
+            <section class="hero">
+                <h1 class="kinetic-title">Self‑portrait in Four Movements</h1>
+                <p class="kinetic-subtitle">I design, simulate, and build across disciplines—chasing clarity where engineering, science, design, and medicine collide.</p>
+            </section>
+
+            <section class="sections">
+                <article class="movement" id="mv-1">
+                    <div class="movement-number">01</div>
+                    <h3>Origins: Curiosity as Operating System</h3>
+                    <p>Early projects were experiments in cause and effect—turning questions into artifacts. That instinct persists: model the world, test the model, ship the proof.</p>
+                </article>
+
+                <article class="movement" id="mv-2">
+                    <div class="movement-number">02</div>
+                    <h3>Practice: Minimal Surfaces, Maximal Meaning</h3>
+                    <p>I like systems that breathe—interfaces with depth yet restraint. The goal is a surface so clean the complexity underneath feels inevitable.</p>
+                </article>
+
+                <article class="movement" id="mv-3">
+                    <div class="movement-number">03</div>
+                    <h3>Method: Build to Think</h3>
+                    <p>Prototypes are arguments. I move from sketch → simulation → instrumented reality, letting data and taste negotiate until the thing clicks.</p>
+                </article>
+
+                <article class="movement" id="mv-4">
+                    <div class="movement-number">04</div>
+                    <h3>North Star: Human Capability</h3>
+                    <p>I’m interested in tools that widen the aperture of human potential. Make the hard things legible. Make the important things beautiful. Make the useful things kind.</p>
+                </article>
+            </section>
+
+            
+
+            <section class="cta">
+                <a class="btn-primary" href="contact.html">Say hello</a>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Section activation on visibility (mirrors the style from other pages)
+        const movements = document.querySelectorAll('.movement');
+        const mvObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                } else {
+                    entry.target.classList.remove('active');
+                }
+            });
+        }, { threshold: 0.5 });
+        movements.forEach(m => mvObserver.observe(m));
+
+        // Generative constellation background
+        // Intent: A subtle, living field that responds to the cursor and breathes.
+        // Designed to be light: ~120 particles on desktop, fewer on mobile; reduces to static on reduced-motion.
+        (function() {
+            const canvas = document.getElementById('constellation');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            const particleCountTarget = Math.max(60, Math.min(160, Math.floor(width / 12)));
+            const particles = [];
+            const mouse = { x: width / 2, y: height / 2, active: false };
+            let needsRender = true;
+            let animationId = null;
+
+            function random(min, max) { return Math.random() * (max - min) + min; }
+
+            function createParticles() {
+                particles.length = 0;
+                const count = particleCountTarget;
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: random(0, width),
+                        y: random(0, height),
+                        vx: random(-0.25, 0.25),
+                        vy: random(-0.25, 0.25),
+                        r: random(0.6, 1.6)
+                    });
+                }
+            }
+
+            function draw(now) {
+                if (!needsRender) {
+                    animationId = requestAnimationFrame(draw);
+                    return;
+                }
+
+                ctx.clearRect(0, 0, width, height);
+
+                // Gentle background vignette for depth
+                const gradient = ctx.createRadialGradient(width/2, height/2, Math.min(width, height)/2, width/2, height/2, 0);
+                gradient.addColorStop(0, 'rgba(255,255,255,0)');
+                gradient.addColorStop(1, 'rgba(0,0,0,0.03)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, width, height);
+
+                // Update and render particles
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+
+                    // Mild breathing motion
+                    if (!prefersReducedMotion) {
+                        const t = now * 0.00007;
+                        p.vx += Math.sin(p.y * 0.0008 + t) * 0.00015;
+                        p.vy += Math.cos(p.x * 0.0008 + t) * 0.00015;
+                    }
+
+                    // Cursor influence
+                    if (mouse.active && !prefersReducedMotion) {
+                        const dx = p.x - mouse.x;
+                        const dy = p.y - mouse.y;
+                        const dist2 = dx*dx + dy*dy;
+                        const radius = 120;
+                        if (dist2 < radius*radius) {
+                            const force = (radius - Math.sqrt(dist2)) / radius * 0.6;
+                            p.vx += (dx / (Math.sqrt(dist2) + 0.0001)) * force * 0.6;
+                            p.vy += (dy / (Math.sqrt(dist2) + 0.0001)) * force * 0.6;
+                        }
+                    }
+
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    // Soft bounds with wrap
+                    if (p.x < -10) p.x = width + 10;
+                    if (p.x > width + 10) p.x = -10;
+                    if (p.y < -10) p.y = height + 10;
+                    if (p.y > height + 10) p.y = -10;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                    ctx.fill();
+                }
+
+                // Connect nearby particles
+                ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const a = particles[i];
+                        const b = particles[j];
+                        const dx = a.x - b.x;
+                        const dy = a.y - b.y;
+                        const d2 = dx*dx + dy*dy;
+                        const maxDist = 130; // tuned for elegance
+                        if (d2 < maxDist * maxDist) {
+                            const alpha = 1 - (Math.sqrt(d2) / maxDist);
+                            ctx.globalAlpha = Math.max(0.02, alpha * 0.15);
+                            ctx.beginPath();
+                            ctx.moveTo(a.x, a.y);
+                            ctx.lineTo(b.x, b.y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                ctx.globalAlpha = 1;
+
+                needsRender = false;
+                animationId = requestAnimationFrame(draw);
+            }
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                createParticles();
+                needsRender = true;
+            }
+
+            function kick() {
+                // Small impulse to create a delightful response on click/tap
+                if (prefersReducedMotion) return;
+                for (let i = 0; i < 12; i++) {
+                    const idx = Math.floor(Math.random() * particles.length);
+                    const p = particles[idx];
+                    p.vx += (Math.random() - 0.5) * 2.2;
+                    p.vy += (Math.random() - 0.5) * 2.2;
+                }
+                needsRender = true;
+            }
+
+            // Events
+            window.addEventListener('resize', resize);
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+                mouse.active = true;
+                needsRender = true;
+            }, { passive: true });
+            window.addEventListener('mouseleave', () => { mouse.active = false; }, { passive: true });
+            window.addEventListener('click', kick, { passive: true });
+
+            // Init
+            createParticles();
+            // Draw once if reduced motion; otherwise run smart loop that only re-renders on demand
+            if (prefersReducedMotion) {
+                // Static frame
+                needsRender = true;
+                draw(performance.now());
+            } else {
+                needsRender = true;
+                animationId = requestAnimationFrame(draw);
+            }
+
+            // Cleanup on unload
+            window.addEventListener('beforeunload', () => {
+                if (animationId) cancelAnimationFrame(animationId);
+            });
+        })();
+    </script>
+</body>
+</html>
+
+

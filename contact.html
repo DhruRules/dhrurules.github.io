@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - Dhruvik Patel</title>
+    <meta property="og:type" content="website">
+    <meta name="description" content="Contact Dhruvik Patel">
+
+    <!-- DNS prefetch for performance -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fefefe;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .nav-home {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            font-size: 0.9em;
+            color: #888;
+            text-decoration: none;
+            z-index: 100;
+            transition: color 0.2s ease;
+        }
+
+        .nav-home:hover {
+            color: #333;
+        }
+
+        .contact-grid {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 4vw;
+            padding: 8vw;
+            position: relative;
+        }
+
+        /* Subtle grid background */
+        .contact-grid::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .column-left {
+            position: sticky;
+            top: 8vw;
+            height: fit-content;
+            align-self: start;
+            padding-right: 2vw;
+        }
+
+        .vertical-word {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: clamp(3rem, 8vw, 8rem);
+            font-weight: 600;
+            color: #222;
+            letter-spacing: 0.08em;
+            line-height: 0.9;
+            margin-bottom: 3rem;
+        }
+
+        .contact-direct {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .contact-direct .label {
+            font-size: 0.9rem;
+            color: #999;
+            letter-spacing: 0.12em;
+        }
+
+        .email-link {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: #333;
+            text-decoration: none;
+            border-bottom: 1px solid #ddd;
+            width: fit-content;
+            transition: color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .email-link:hover {
+            color: #000;
+            border-color: #333;
+        }
+
+        .form-steps {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .step {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            padding: 6vw 4vw;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .step:last-child {
+            border-bottom: 0;
+        }
+
+        .step-number {
+            position: absolute;
+            right: -1vw;
+            top: -2vw;
+            font-size: clamp(6rem, 14vw, 12rem);
+            font-weight: 300;
+            color: #f8f8f8;
+            line-height: 1;
+            z-index: -1;
+            transform: translateY(20px);
+            transition: transform 0.5s ease, opacity 0.5s ease;
+            opacity: 0.8;
+        }
+
+        .step.active .step-number {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .step-title {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 500;
+            line-height: 1.05;
+            color: #222;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-desc {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: #666;
+            margin-bottom: 2rem;
+            max-width: 60ch;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            margin-top: 0.5rem;
+        }
+
+        .chip {
+            appearance: none;
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #333;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
+        }
+
+        .chip:hover {
+            background: #f8f8f8;
+        }
+
+        .chip.active {
+            background: #111;
+            color: #fff;
+            border-color: #111;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-top: 1rem;
+            max-width: 580px;
+        }
+
+        label {
+            font-size: 0.95rem;
+            color: #666;
+            letter-spacing: 0.02em;
+        }
+
+        textarea {
+            appearance: none;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            color: #222;
+            background: #fff;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        textarea::placeholder {
+            color: #aaa;
+        }
+
+        textarea:focus {
+            border-color: #333;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 160px;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-primary {
+            appearance: none;
+            border: 1px solid #111;
+            background: #111;
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 1rem;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: #000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .mailto-fallback {
+            font-size: 0.95rem;
+            color: #666;
+        }
+
+        .mailto-fallback a {
+            color: #333;
+            text-decoration: none;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .mailto-fallback a:hover {
+            border-color: #333;
+        }
+
+        @media (max-width: 1024px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+                gap: 2vw;
+                padding: 6vw;
+            }
+
+            .column-left {
+                position: relative;
+                top: 0;
+                border-right: none;
+                padding-right: 0;
+                margin-bottom: 4vw;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .vertical-word {
+                writing-mode: horizontal-tb;
+                letter-spacing: -0.02em;
+                line-height: 1;
+                margin-bottom: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-home {
+                top: 20px;
+                left: 20px;
+            }
+
+            .contact-grid {
+                padding: 4vw;
+            }
+
+            .step {
+                min-height: auto;
+                padding: 16vw 2vw 12vw 2vw;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .step-number, .chip, .btn-primary {
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="nav-home">← Back</a>
+
+    <div class="contact-grid">
+        <aside class="column-left">
+            <div class="vertical-word">CONTACT</div>
+            <div class="contact-direct">
+                <div class="label">EMAIL</div>
+                <a id="emailLink" class="email-link" href="#" rel="nofollow noopener noreferrer">Loading…</a>
+            </div>
+        </aside>
+
+        <main class="form-steps">
+            <section class="step" id="step-1">
+                <div class="step-number">01</div>
+                <h2 class="step-title">What’s this about?</h2>
+                <p class="step-desc">Pick a topic so I can route your message in my brain.</p>
+                <div class="chips" role="group" aria-label="Topic">
+                    <button type="button" class="chip" data-value="Collaboration">Collaboration</button>
+                    <button type="button" class="chip" data-value="Advisory">Advisory</button>
+                    <button type="button" class="chip" data-value="Casual chat">Casual chat</button>
+                    <button type="button" class="chip" data-value="Other">Other</button>
+                </div>
+                <input type="hidden" id="topic" name="topic" value="">
+            </section>
+
+            <section class="step" id="step-3">
+                <div class="step-number">02</div>
+                <h2 class="step-title">Message</h2>
+                <p class="step-desc">Tell me what you’re building, exploring, or curious about.</p>
+                <div class="field">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" placeholder="Write a few lines…"></textarea>
+                </div>
+                <div class="actions">
+                    <button id="submitBtn" class="btn-primary" type="button">Send</button>
+                    <span class="mailto-fallback">Opens your email client</span>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Step activation based on visibility
+        const steps = document.querySelectorAll('.step');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                } else {
+                    entry.target.classList.remove('active');
+                }
+            });
+        }, { threshold: 0.5 });
+        steps.forEach(step => observer.observe(step));
+
+        // Topic chips selection with auto-scroll to message and autofocus
+        const chipButtons = document.querySelectorAll('.chip');
+        const topicInput = document.getElementById('topic');
+        const messageSection = document.getElementById('step-3');
+        let selectedTopic = '';
+        chipButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const wasActive = btn.classList.contains('active');
+                chipButtons.forEach(b => b.classList.remove('active'));
+                if (!wasActive) {
+                    btn.classList.add('active');
+                    selectedTopic = btn.getAttribute('data-value') || '';
+                } else {
+                    selectedTopic = '';
+                }
+                topicInput.value = selectedTopic;
+                updateMailto();
+                // Smooth scroll to message
+                if (messageSection) {
+                    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    messageSection.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+                }
+                // Autofocus message textarea shortly after scroll starts
+                if (messageInput && typeof messageInput.focus === 'function') {
+                    setTimeout(() => {
+                        try { messageInput.focus({ preventScroll: true }); } catch (_) { messageInput.focus(); }
+                    }, 250);
+                }
+            });
+        });
+
+        // Build mailto link dynamically (no email field required)
+        const submitBtn = document.getElementById('submitBtn');
+        const messageInput = document.getElementById('message');
+
+        // Email obfuscation and reveal (must come BEFORE first updateMailto() call)
+        function buildEmail() {
+            const u = [100,104,114,117,118,105,107].map(c => String.fromCharCode(c)).join('');
+            const d = [100,104,114,117,118,105,107,112].map(c => String.fromCharCode(c)).join('') + '.' + ['c','o','m'].join('');
+            return u + '@' + d;
+        }
+        const obfuscatedEmail = buildEmail();
+        const emailLinkEl = document.getElementById('emailLink');
+        if (emailLinkEl) {
+            emailLinkEl.textContent = obfuscatedEmail;
+            emailLinkEl.setAttribute('href', 'mailto:' + obfuscatedEmail);
+        }
+
+        function updateMailto() {
+            const to = obfuscatedEmail;
+            const message = (messageInput && messageInput.value || '').trim();
+            const subjectBase = 'Contact via website';
+            const subject = selectedTopic ? `${subjectBase}: ${selectedTopic}` : subjectBase;
+
+            const body = message;
+
+            const href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            if (submitBtn) submitBtn.setAttribute('data-href', href);
+        }
+
+        messageInput.addEventListener('input', updateMailto);
+        updateMailto();
+
+        submitBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const href = submitBtn.getAttribute('data-href');
+            if (href) {
+                window.location.href = href;
+            }
+        });
+    </script>
+</body>
+</html>
