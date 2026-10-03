@@ -127,6 +127,32 @@
             visibility: visible;
         }
         
+        /* Keep navigation usable when the 3D experience cannot initialize. */
+        #navigation-links.fallback {
+            top: 30px;
+            left: 30px;
+            width: calc(100% - 60px);
+            height: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        #navigation-links.fallback .ground-link {
+            position: static;
+            transform: none;
+            opacity: 0.8;
+            visibility: visible;
+        }
+
+        #navigation-links.fallback .ground-link:hover {
+            transform: translateY(-2px);
+        }
+
+        #navigation-links.fallback + .controls-hint {
+            display: none;
+        }
+
         .controls-hint {
             position: absolute;
             bottom: 20px;
@@ -572,7 +598,7 @@
             
         } catch (error) {
             console.error('Failed to load Three.js modules:', error);
-            // No loading element to update - error logged to console
+            document.getElementById('navigation-links').classList.add('fallback');
         }
     </script>
 </body>
