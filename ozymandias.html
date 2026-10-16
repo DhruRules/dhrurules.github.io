@@ -46,6 +46,8 @@
         let poiObjects = [];
         const playerBoundingBox = new THREE.Box3();
         const objectBoundingBox = new THREE.Box3();
+        const playerWorldPosition = new THREE.Vector3();
+        const poiWorldPosition = new THREE.Vector3();
         const rainSpeed = 0.3;
         const rainSpawnHeight = 50;
         const rainAreaSize = 100;
@@ -396,14 +398,18 @@
             return false;
         }
 
-         // --- Check Points of Interest --- (Checks distance to POI anchor mesh)
+         // --- Check Points of Interest --- (World-space distance along the ground)
          function checkPOIs() {
             if (!playerCube) return;
-            const playerPos = playerCube.position;
+            playerCube.getWorldPosition(playerWorldPosition);
             poiObjects.forEach(poi => {
-                // Check distance to the POI's anchor mesh position
+                // Resolve parent transforms and ignore anchor height for ground-level proximity.
                 if (poi.mesh && poi.mesh.geometry) { // Ensure mesh exists
-                    const distance = playerPos.distanceTo(poi.mesh.position);
+                    poi.mesh.getWorldPosition(poiWorldPosition);
+                    const distance = Math.hypot(
+                        playerWorldPosition.x - poiWorldPosition.x,
+                        playerWorldPosition.z - poiWorldPosition.z
+                    );
                     if (distance < poi.triggerDistance && !poi.triggered) {
                         showMessage(poi.text, 4000);
                         poi.triggered = true;
