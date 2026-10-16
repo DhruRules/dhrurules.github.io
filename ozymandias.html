@@ -23,7 +23,7 @@
             background-color: rgba(0, 0, 0, 0.8); color: white;
             display: flex; justify-content: center; align-items: center;
             font-size: 24px; font-family: sans-serif; cursor: pointer;
-            z-index: 200; text-align: center; padding: 20px;
+            z-index: 200; text-align: center; padding: 20px; box-sizing: border-box;
         }
     </style>
 </head>
@@ -54,7 +54,12 @@
 
         // Tone.js variables
         let rainNoise, rainFilter, rainVolume;
-        let audioInitialized = false; // Flag to ensure audio starts only once
+        let experienceStarted = false;
+        let audioInitialized = false;
+        let audioStarting = false;
+        let lastFrameTime = null;
+        let accumulatedTime = 0;
+        const simulationStep = 1 / 60; // Preserve the original pacing at 60 fps.
 
         // --- Initialization ---
         function init() {
@@ -106,22 +111,28 @@
             // --- Create Environment, Landmarks & POIs ---
             createEnvironment(); // Creates general debris/buildings
             createLandmarks();  // Creates specific Ozymandias structures
+            scene.updateMatrixWorld(true); // Collision bounds need parent transforms before the first render.
 
             // --- Create Rain Particle System ---
             createRain();
 
             // --- Setup Audio (but don't start yet) ---
-            setupAudio();
+            try {
+                if (typeof Tone !== 'undefined') setupAudio();
+            } catch (error) {
+                console.warn("Rain audio unavailable; exploration remains available.", error);
+            }
 
             // --- Event Listeners ---
             // Listener for initial interaction to start audio
             const startOverlay = document.getElementById('start-overlay');
             startOverlay.addEventListener('click', handleFirstInteraction);
-            window.addEventListener('keydown', handleFirstInteraction); // Also allow keypress to start
 
             window.addEventListener('keydown', handleKeyDown); // General keydown handler
             window.addEventListener('keyup', handleKeyUp);
             window.addEventListener('resize', onWindowResize);
+            window.addEventListener('blur', clearInput);
+            document.addEventListener('visibilitychange', clearInput);
 
             // Don't start animation loop until user interaction
             // animate(); // Moved to handleFirstInteraction
@@ -129,29 +140,32 @@
 
          // --- Handle First User Interaction ---
          function handleFirstInteraction() {
-            if (audioInitialized) return; // Only run once
+            startAudio(); // Retry on a later gesture if the browser rejected audio.
+            if (experienceStarted) return;
+            experienceStarted = true;
 
             const startOverlay = document.getElementById('start-overlay');
             if (startOverlay) {
                 startOverlay.style.display = 'none'; // Hide overlay
             }
 
-            // Start Tone.js context and rain sound
-            Tone.start().then(() => {
-                console.log("Audio Context Started");
-                if (rainNoise && rainNoise.state !== 'started') {
-                    rainNoise.start();
-                    console.log("Rain noise started");
-                }
-            }).catch(e => {
-                console.error("Tone.start() failed:", e);
-            });
-
-            audioInitialized = true;
             showMessage("Use WASD or Arrow Keys to move. Explore the ruins.", 5000); // Show message after start
-            animate(); // Start the animation loop now
+            requestAnimationFrame(animate);
          }
 
+        async function startAudio() {
+            if (audioInitialized || audioStarting || typeof Tone === 'undefined' || !rainNoise) return;
+            audioStarting = true;
+            try {
+                await Tone.start();
+                if (rainNoise.state !== 'started') rainNoise.start();
+                audioInitialized = true;
+            } catch (error) {
+                console.warn("Rain audio could not start; it can retry on the next interaction.", error);
+            } finally {
+                audioStarting = false;
+            }
+        }
 
         // --- Setup Audio (Tone.js) ---
         function setupAudio() {
@@ -324,7 +338,7 @@
 
              standardPoiData.forEach(data => {
                 const poiGeometry = new THREE.IcosahedronGeometry(0.6);
-                const poiMesh = new THREE.Mesh(poiGeometry, poiMaterial);
+                const poiMesh = new THREE.Mesh(poiGeometry, poiMaterial.clone());
                 poiMesh.position.copy(data.pos);
                 poiMesh.castShadow = true;
                 scene.add(poiMesh);
@@ -353,6 +367,8 @@
                 color: 0xaaaaee, size: 0.15, transparent: true, opacity: 0.7, sizeAttenuation: true,
             });
             rainSystem = new THREE.Points(rainGeometry, rainMaterial);
+            // Particles recycle around the moving player, outside their initial bounding sphere.
+            rainSystem.frustumCulled = false;
             scene.add(rainSystem);
         }
 
@@ -375,11 +391,20 @@
 
         // --- Handle Keyboard Input ---
         function handleKeyDown(event) {
-            // Handle first interaction if audio not yet started (e.g., if user presses key before clicking)
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)) {
+                event.preventDefault();
+            }
+            // Start exploration or retry audio on a user gesture.
             handleFirstInteraction();
             keys[event.code] = true;
         }
         function handleKeyUp(event) { keys[event.code] = false; }
+
+        function clearInput() {
+            Object.keys(keys).forEach(key => { delete keys[key]; });
+            lastFrameTime = null;
+            accumulatedTime = 0;
+        }
 
         // --- Check for Collision --- (Unchanged)
         function checkCollision(moveVec) {
@@ -414,9 +439,10 @@
                         showMessage(poi.text, 4000);
                         poi.triggered = true;
                         // Optional: Visual feedback on the anchor mesh if it's a distinct POI object
-                        if (poi.mesh.material.emissive) {
+                        if (poi.mesh.material.emissive && poi.mesh.material.emissive.getHex() !== 0) {
+                            const originalIntensity = poi.mesh.material.emissiveIntensity;
                             poi.mesh.material.emissiveIntensity = 1.0;
-                            setTimeout(() => { poi.mesh.material.emissiveIntensity = 0.5; }, 500);
+                            setTimeout(() => { poi.mesh.material.emissiveIntensity = originalIntensity; }, 500);
                         }
                     } else if (distance > poi.resetDistance && poi.triggered) {
                         poi.triggered = false;
@@ -450,16 +476,27 @@
         }
 
         // --- Animation Loop ---
-        function animate() {
-            // Check if audio has been initialized before continuing the loop
-            if (!audioInitialized) return;
+        function animate(timestamp) {
+            if (!experienceStarted) return;
 
             requestAnimationFrame(animate);
+            if (document.hidden) {
+                clearInput();
+                return;
+            }
 
-            // Update game logic
-            updatePlayerMovement();
-            checkPOIs();
-            animateRain();
+            // Fixed steps keep movement, rain, camera easing and collision checks consistent.
+            // Cap catch-up after a stall so the player cannot jump through obstacles.
+            if (lastFrameTime !== null) {
+                accumulatedTime += Math.min((timestamp - lastFrameTime) / 1000, simulationStep * 5);
+            }
+            lastFrameTime = timestamp;
+            while (accumulatedTime + 1e-10 >= simulationStep) {
+                updatePlayerMovement();
+                checkPOIs();
+                animateRain();
+                accumulatedTime = Math.max(0, accumulatedTime - simulationStep);
+            }
 
             // Render scene
             renderer.render(scene, camera);
